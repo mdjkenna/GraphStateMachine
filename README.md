@@ -1,4 +1,26 @@
+[![](https://jitpack.io/v/mdjkenna/GraphStateMachine.svg)](https://jitpack.io/#mdjkenna/GraphStateMachine)
+![Build](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/workflow.yml/badge.svg)
+
 # Graph State Machine
+
+### Adding the library to your project
+
+Ensure that you have the JitPack repository added to available repositories in your project (using the below or your projects equivalent).
+
+```kotlin
+repositories {
+  mavenCentral()
+  maven("https://jitpack.io")
+}
+```
+
+To add the library to your project, add the following to your `build.gradle.kts` file:
+    
+```kotlin
+dependencies {
+    implementation("com.github.mdjkenna:GraphStateMachine:<latest-release>") // See releases, or latest tag at top of README 
+}
+```
 
 ### What is a GraphStateMachine and why use one ?
 State machines provide a structured way to define states and transitions. 
