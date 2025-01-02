@@ -31,7 +31,7 @@ tasks.withType<KotlinCompile> {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.0")
     testImplementation(kotlin("test"))
     testImplementation("io.strikt:strikt-core:0.34.0")
     testImplementation("junit:junit:4.13.2")
@@ -48,6 +48,15 @@ tasks.register<Jar>("dokkaJavadocJar") {
     dependsOn(tasks.named("dokkaJavadoc"))
     from(tasks.named("dokkaJavadoc"))
     archiveClassifier.set("javadoc")
+}
+
+tasks.dokkaJavadoc.configure {
+    dokkaSourceSets {
+        named("main") {
+            includeNonPublic.set(true) // Exclude non-public members
+            reportUndocumented.set(true) // Warn about undocumented members
+        }
+    }
 }
 
 publishing {
