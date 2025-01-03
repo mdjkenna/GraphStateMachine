@@ -5,7 +5,7 @@
 
 ### Adding the library to your project
 
-Ensure that you have the JitPack repository added to available repositories in your project (using the below or your projects equivalent).
+Include the JitPack repository in your project. For example:
 
 ```kotlin
 repositories {
@@ -14,34 +14,37 @@ repositories {
 }
 ```
 
-To add the library to your project, add the following to your `build.gradle.kts` file:
+To add the library to your project, add the dependency to your `build.gradle.kts` file like below:
     
 ```kotlin
 dependencies {
-    implementation("com.github.mdjkenna:GraphStateMachine:<latest-release>") // See releases, or latest tag at top of README 
+    implementation("com.github.mdjkenna:GraphStateMachine:<latest-release>")
 }
 ```
 
-### What is a GraphStateMachine and why use one ?
-State machines provide a structured way to define states and transitions. 
+You can refer to the latest release on JitPack at the top of the README.md file, or in the releases section of the repository.
+
+### What is a graph state machine and why use one ?
+State machines can provide a structured way to define possible states of a system, 
+including the sequences of states that a system is permitted to transition through. 
 They can enforce restrictions to prevent invalid or unintended state changes.
-This is useful for situations that can be represented as a set of states with defined transitions between them.
 
 State machines find uses in areas such as:
 - Workflow automation
 - GUI state management
 - Event-driven systems
  
-The `GraphStateMachine` represents the landscape of possible states within a state machine as a directed graph, where states are represented by vertices and transitions correspond to directed edges.
-Using a directed graph as the foundation of a state machine allows for explicit enforcement of rules about valid state transitions while offering flexibility in defining complex relationships between states. 
-The transitions and their conditions are encapsulated within the graph at creation time, ensuring that the state machine’s behavior _can be_ deterministic and easy to reason about (but not necessarily).
+The `GraphStateMachine` represents the landscape of possible states within a state machine as a directed graph, where states are represented by vertices.
+Using a directed graph as the foundation of a state machine allows for:
+- Explicit enforcement of rules about valid state transitions
+- Supporting the encapsulation of state machine logic
+- Elaborate control over the possible paths of state changes with the possibility of generating advanced behaviour
+- An easy to visualise model of possible states and transitions
 
 Depending on how it is used, a `GraphStateMachine` might behave in a similar way to a finite state machine (FSM).
-The `GraphStateMachine` supports transition flags (`IEdgeTransitionFlags`) that can dynamically determine whether a transition is valid or not. 
-When additional factors such as this are used to control transition logic, the state machine could be considered to be more complex than a traditional FSM.
-
-In addition, a vertex is not prevented from being stateful itself, and could also potentially be used to control if an outgoing edge is traversed. 
-Depending on how it is being used, the term `Extended Finite State Machine` might be a better fit when looking at additional state information to make transitions.
+Alternatively state machine could be considered to be more complex than a traditional FSM, as it can dynamically determine whether a transition is valid or not.
+This can be achieved by using transition flags (`IEdgeTransitionFlags`) which are discussed in detail in the sections below.
+Depending on usage, the term `Extended Finite State Machine` might be a better fit when looking at additional state information to make transitions.
 
 _In summary_: the `GraphStateMachine` is a state machine with possible states and transitions represented as a graph.  
 
@@ -52,8 +55,15 @@ Below is an example of a directed acyclic graph that can be represented in the l
 
 ### Creating a `GraphStateMachine`
 
-You can create a `GraphStateMachine` object by using the `buildGraphStateMachine` function. This is an entrypoint to a series of DSL functions that allow various aspects of state machine behaviour to be configured.
-Below is an example of how to create the directed graph in the GraphViz diagram above and use it is a model, using `buildGraphStateMachine` and `buildGraph` functions:
+A `GraphStateMachine` instance can be created by using the `buildGraphStateMachine` function. 
+This is an entrypoint into a series of Kotlin DSL functions which are used to build the graph and configure the state machine.
+The graph used by the state machine is constructed within the `buildGraph` function.
+
+Inside the `GraphBuilderScope` vertices can be added to the graph using `addVertex`. Within the vertex builder scope, 
+`addOutgoingEdge` is used to add outgoing edges to a vertex. The compiler will prevent a scoped function from being called in the wrong place.
+
+The nested hierarchy of available functions to configure a `GraphStateMachine` instance is demonstrated below, 
+in this Kotlin example of how to create a `GraphStateMachine` with the 8 vertex directed acyclic graph in the diagram above.
 
 ```kotlin
 fun main() {
@@ -119,22 +129,51 @@ fun main() {
                 }
             }
 
-            addVertex(eight) {}
+            addVertex(eight)
         }
     }
 
 }
 ```
 
+#### Implementations of IVertex
+
+A vertex that is added to the graph needs to implement the `IVertex` interface.
+From the perspective of graph traversal, the identifier for a vertex (the `ìd` field on `IVertex`) is the only information that is used to identify a vertex.
+The identifier has to be unique within the graph.
+Attempting to add duplicate identifiers when building the graph results in an error.
+
+Any valid `IVertex` implementation can be used as a graph vertex.
+There is already an implementation of `IVertex` provided in the library: `Vertex`.
+This class is just a convenient utility that can be used as a vertex immediately. 
+
+Implementers of `IVertex` have the choice of making vertex implementations hold mutable state.
+**Note:** If using mutable vertex implementations, safety in multithreaded environments needs to be handled by the implementer.
+
+#### Adding outgoing edges
+
+Edges are added to the graph as directed outgoing edges _from_ a vertex.
+The vertex an edge is coming from will already be added to the graph.
+The `to` property of an edge is the identifier of the vertex that the edge is pointing to.
+
+All vertices referenced by a `to` property should have been added to the graph before it is built, or an error is thrown.
+An edge can temporarily reference a vertex that has not been added to the graph though, while the graph is being built.
+This allows for edges to be added to the graph in any order, as long as the vertex referenced by the `to` property exists within the graph before the end of the builder function is reached.
+
 #### Transition Flags and Handlers
 
-The `GraphStateMachine` traverses the graph using Depth First Search (DFS).
-Additional transition logic can be added using `IEdgeTransitionFlags`. 
-Below is a snippet of building the graph shown above but with additional configuration added to 
-the edge from vertex five to seven using the transition flags, which can block the state transition otherwise enabled by the edge.
+The `GraphStateMachine` traverses the graph using Depth First Search as it transitions through states.
+The structure of the graph can be used to control possible state transitions, but additional logic can be added to the traversal process using transition flags and handlers.
+These are set when building the state machine, and can dynamically control state transitions across edges based on conditions that can change after the graph has been created (while the state machine is being used).
 
-The `setTransitionHandler` receives a `TransitionScope` that makes the flags available to the handler via the `flags` field, as well as
-the vertex the edge is coming from via the `from` field.
+Transition flags are made available to a transition handler which then determines whether the transition across an edge can occur or not.
+Transition flags must be an instance of `IEdgeTransitionFlags`.
+
+Below is a snippet where additional configuration is added to 
+an edge from vertex five to seven using a transition handler in the edge builder scope, which can block a state transition otherwise enabled by the edge.
+
+The `TransitionScope` inside this function call makes the flags available to the handler via the `flags` field, as well as
+the vertex the edge is coming from via the `from` field. This is shown in the example below:
 
 ```kotlin
 buildGraphStateMachineWithTransitionFlags<Vertex, TransitionFlagsImpl> {
@@ -157,47 +196,30 @@ buildGraphStateMachineWithTransitionFlags<Vertex, TransitionFlagsImpl> {
 }   
 ```
 
-#### Implementations of IVertex
-
-The vertex that is added to the graph needs only to implement the `IVertex` interface.
-This means it must provide a unique string identifier for the vertex. The identifier has to be unique within the graph.
-Attempting to add duplicate identifiers when building the graph results in an error. 
-From the perspective of graph traversal, the identifier (the `ìd` field on `IVertex`) is the only information that is used to identify a vertex.
-
-There is already an implementation of `IVertex` provided in the library: `Vertex`
-
-This is a convenience but does not have to be used. Any valid `IVertex` implementation can be used as a graph vertex.
-
-#### Adding outgoing edges
-
-Edges are added to the graph as directed outgoing edges from a vertex.
-The vertex an edge is coming from will already be added to the graph.
-The `to` property of an edge is the identifier of the vertex that the edge is pointing to.
-
-When building the graph, a vertex with the identifier referenced in the `to` property does not need to exist within the graph at the exact instant the `to` property is set.
-This allows for edges to be added to the graph in any order, as long as the vertex referenced by the `to` property exists within the graph before the graph is built (before the end of the DSL scope is reached).
-By the time the end of the graph builder scope has been reached, all vertices referenced by a `to` property should have been added to the graph, or an error is thrown.
+**Note:** Specifying transition flags is optional, and can be avoided by using: `buildGraphStateMachine` instead (in which case the no transition flags need to be set by the caller). 
+If transition flags are specified via use of the `buildGraphStateMachineWithTransitionFlags`,
+an instance of the specified type _must_ be set within the functions scope or an exception will be thrown i.e. *Implementations of `IEdgeTransitionFlags` must be non-null if specified*. 
 
 #### Traversal Types
-The `EdgeTraversalType` class is an enum used to determine how the state machine traverses the graph in certain situations.
-It allows the caller to select their desired behaviour in certain corner cases when traversing the graph.
+As mentioned previously, states are transitioned through using DFS.
+Traversal types allow the user to control what happens in certain scenarios when traversing the graph.
 
-There are two situations affected by the traversal type currently:
-- An edge is not traversed because the edge's transition handler blocked the transition,
-  but it later becomes a traversal candidate while its source vertex is still active
+There are two situations where behavior will vary according to the `EdgeTraversalType` that is configured in the state machine:
+- A state transition is blocked by a transition handler initially, but later becomes possible while the edges source vertex is still not fully explored (gray)
 - The graph contains cycles
 
 If neither of the above situations are encountered, then there is currently no difference between the traversal types.
-The available options are below:
+The available `EdgeTraversalType` options are:
+- **RetrogradeAcyclic:** Rechecks non-visited edges of a gray vertex to explore previously skipped edges
+- **ForwardAcyclic:** Resumes traversal from the last visited edge of a vertex, ignoring earlier skipped edges, by tracking a "current edge index" per vertex
+- **ForwardCyclic:** Similar to `ForwardAcyclic`, but it does not ignore cycles
 
-The traversal type is set using `EdgeTraversalType`
-- **RetrogradeAcyclic:** Rechecks non-visited edges of the current vertex to explore previously skipped edges.
-- **ForwardAcyclic:** Resumes traversal from the last visited edge of the current vertex, ignoring earlier skipped edges.
-- **ForwardCyclic:** Similar to `ForwardAcyclic`, but it does not ignore cycles. Note when transitioning to a gray vertex the edge index is reset to the start.
-  This can cause the state machine to cycle indefinitely through states of a cyclic path. This can be desirable, however caution is needed.
-  Generally transition flags would need to be used to stop this behaviour from the outset, or eventually, after a delay.
+##### Note on `ForwardCyclic`:
+When transitioning through a cycle the edge index for the new vertex (which is already a partially explored index in the case of a cycle) is reset to the start.
+This can cause the state machine to cycle indefinitely through states of a cyclic path. This can be desirable, however caution is needed.
+Generally transition flags would be required to stop or prevent this behaviour (if necessary) immediately or after a delay. Vertex state is also an option for coordinating this.
 
-The traversal type can be set inside: `GraphStateMachineBuilderScope` via the `setTraversalType` function.
+An `EdgeTraversalType` can be specified via the `setTraversalType` function when building the state machine, which is shown in the snippet directly below:
 
 ```kotlin
 buildGraphStateMachineWithTransitionFlags<TestVertex, TransitionFlagsImpl> {
@@ -207,19 +229,15 @@ buildGraphStateMachineWithTransitionFlags<TestVertex, TransitionFlagsImpl> {
 }   
 ```
 
-If not set explicitly, the default is: `RetrogradeAcyclic`
+If `EdgeTraversalType` is not set explicitly then `RetrogradeAcyclic` is used.
 
 ### Using the `GraphStateMachine`
 
 The `dispatch` function is used to send actions (`GraphStateMachineAction`) to the state machine, which cause state transitions.
+**Note:** The `GraphStateMachine` moves through states _one at a time_, with one transition per action.
+
 The main action is `Next` for forward traversal. 
 This action might be the only action used depending on the implementation and requirements.
-
-There is also a `Previous` action which can be used to go to previous states. 
-Note that moving to the previous state is unconditional as the `Previous` action simply moves to the state machine to the previous state that it was in. 
-Arriving at the previous state will cause edges to be explored from the beginning again for the vertex of the new state.
-This default behaviour can of course be modified using custom transition flags, if desirable.
-
 You can see in the below example how the state machine is traversed using the `Next` action using depth first search.
 
 ```kotlin
@@ -242,20 +260,23 @@ Current ID: 6
 */
 ```
 
-The path taken is as a result of DFS and ordered edges in the graph. 
+The path taken is as a result of DFS and ordered edges in the graph, noting again there is one state transition per action.
 Outgoing edges are visited in the order they are added to a vertex by default, 
 however the order can be set manually in the edge builder scope to be different to the order of appearance.
 The first edge that is valid is the one that is explored at a given point.
 
+There is also a `Previous` action which can be used to go to previous states.
+Note that moving to the previous state is unconditional as the `Previous` action simply moves to the state machine to the previous state that it was in.
+Depending on requirements and graph structure the `Previous` action could possibly be avoided.
+
 #### Cyclic Graph Example and Traversal Types
-Below is an example of a 15 vertex graph that contains cycles (which can be used by a `GraphStateMachine`). 
-It is a more complex example than the previous 8 vertex graph and produces more complex behavior. 
-The selection of traversal type also becomes more significant, as does the design of transition handlers to manage cycle exploration (if applicable).
+Below is a diagram of a 15 vertex graph that contains cycles. It is more complex than the previous 8 vertex graph.
+The selection of traversal type becomes more significant for this graph, as does the design of strategies to manage cycle exploration and escape infinite cycles (if applicable).
 
 <!--suppress CheckImageSize -->
 <img src="Example15VertexCyclic.png" alt="Example Image" width="500"/>
 
-If setting the traversal type to be: `ForwardCyclic` and starting at vertex 1, 
+If setting a traversal type of: `ForwardCyclic` and starting at vertex 1, 
 the state machine will encounter an infinite loop around a cycle starting at vertex 6, the path of which can be seen in the below example. 
 There are of course other cycles in the graph, but if starting at vertex 1 and traversing unconditionally, this cycle will not be escaped. 
 
@@ -281,11 +302,11 @@ Current ID: 2
 ```
 
 Moving through cycles in this way can be useful.
-Again this loop can be prevented or broken after a delay using transition flags to force an alternative edge to be traversed.
-Of course, if the loop shouldn't exist at all then it should be avoided in the graph's construction.
+Again this loop can be prevented or broken after a delay using transition flags or vertex state to force an alternative edge to be traversed.
+Of course, if a loop shouldn't exist at all then it should be avoided in the graph's construction where possible, or a different traversal type used.
  
-Let's look at the same graph but with the traversal type set to `RetrogradeAcyclic`, 
-which is the default option (**note:** unconditional traversal means `ForwardAcyclic` produces the same path).
+Let's look at the same graph with a traversal type of `RetrogradeAcyclic`, 
+which is the default option (**Note:** Unconditional traversal means `ForwardAcyclic` produces the same path).
 
 ```kotlin
 repeat(14) {
@@ -313,7 +334,7 @@ Current ID: 5
  */
 ```
 
-You can see above that since cycles are being skipped when using the `RetrogradeAcyclic` traversal type the graph state machine takes a different path through the graph. 
+You can see above that cycles are being skipped when using `RetrogradeAcyclic` and a different path through the graph is taken. 
 Note the end state of 5 is reached, with no more available states as a result of ignoring cycles (going to 8 from 5 here would cause a cycle).
 The graph discussed in this section can be constructed using the graph state machine builder DSL in the below snippet:
 
@@ -440,8 +461,29 @@ buildGraphStateMachine<Vertex> {
 
 ```
 
-#### Concurrency
+#### Concurrency and mutability
 
-The `GraphStateMachine` is not inherently thread-safe.
-Use of the state machine should be confined to a single thread.
+The `GraphStateMachine` is not inherently thread-safe and its usage should be confined to a single thread.
 There are many options to achieve this. Currently none are imposed.
+
+As mentioned above, the graph itself can be made completely immutable by using immutable vertices (such as the provided `Vertex` class). 
+`IEdgeTransitionFlags` implementations are optionally provided as a way of integrating isolated mutable state into the graph state machine's conditional traversal logic, 
+while still keeping the graph itself reusable by other processes.
+
+**Note:** A `Graph` can be built in isolation via the `buildGraphOnly` method, and the resulting `Graph` can be applied in a `GraphStateMachine` builder scope via a setter.
+This would allow the graph to be reused freely. 
+
+The library stores no mutable state inside a graph instance, so this is only introduced by the user if they require it within their own vertex implementation.
+The library _does_ store mutable state within the traversal components of the `GraphStateMachine`, hence although an immutable graph is reusable by multiple processes and can be accessed by multiple threads, 
+the `GraphStateMachine` itself should be confined to a single thread.
+
+_In summary:_ 
+- There are multiple ways of handling mutability within the `GraphStateMachine` instance, and the library tries not to be too opinionated about how this is done
+- Graph instances are reusable if the `IVertex` implementations are immutable
+- Use of a `GraphStateMachine` should always be confined to a single thread. Typically, a flow collector using Kotlin coroutines can achieve this easily, however there are no solutions imposed by the library.
+  For example, you could use RxKotlin, or your own custom solution to achieve this
+
+
+
+
+

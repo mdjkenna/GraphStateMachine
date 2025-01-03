@@ -1,0 +1,7 @@
+jdk:
+  - openjdk8
+
+build:
+  commands:
+    - ./gradlew clean build
+    - ./gradlew publishToMavenLocal
