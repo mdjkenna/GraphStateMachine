@@ -1,6 +1,5 @@
-name: GSM Master Branch CI
+name: Build
 
-# Trigger the workflow on push to "master" or pull request targeting "master"
 on:
   push:
     branches:
@@ -14,22 +13,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Set up JDK 17 for the project
       - name: Set Up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle  # Enable Gradle dependency caching
+          cache: gradle
 
-      # Grant execute permissions to the Gradle wrapper script
       - name: Grant Execute Permission for Gradle Wrapper
         run: chmod +x gradlew
 
-      # Run the unit tests
       - name: Run Unit Tests
-        run: ./gradlew test
+        run: ./gradlew clean test jacocoTestReport
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./build/reports/jacoco/test/jacocoTestReport.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true

@@ -4,4 +4,4 @@ jdk:
 build:
   commands:
     - ./gradlew clean build
-    - ./gradlew publishToMavenLocal
+    - ./gradlew publish

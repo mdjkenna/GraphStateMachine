@@ -16,7 +16,7 @@ object AssertionUtils {
         expectThat(graphStateMachine.tracePath().map(IVertex::id))
             .isEqualTo(expectedPath)
 
-        expectThat(graphStateMachine.currentState.value.id)
+        expectThat(graphStateMachine.currentState.vertex.id)
             .isEqualTo(expectedPath.last())
     }
 }
