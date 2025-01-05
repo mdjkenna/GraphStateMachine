@@ -24,9 +24,9 @@ class TestGraphBidirectionalTraversal (
         val forwardUpdated = ArrayList<Vertex>()
 
         do {
-            forwardUpdated.add(graphStateMachine.currentState.value)
+            forwardUpdated.add(graphStateMachine.currentState.vertex)
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
-        } while (graphStateMachine.currentState.hasMore)
+        } while (graphStateMachine.currentState.isWithinBounds)
 
         val forwardTraced = graphStateMachine.tracePath().map {
             it.id
@@ -37,9 +37,9 @@ class TestGraphBidirectionalTraversal (
 
         val backwardsUpdated = ArrayList<Vertex>()
         do {
-            backwardsUpdated.add(graphStateMachine.currentState.value)
+            backwardsUpdated.add(graphStateMachine.currentState.vertex)
             graphStateMachine.dispatch(GraphStateMachineAction.Previous)
-        } while (graphStateMachine.currentState.hasPrevious)
+        } while (graphStateMachine.currentState.isWithinBounds)
 
         Assert.assertEquals(parameters.expectedForwardPath.reversed(), backwardsUpdated.map { it.id })
     }

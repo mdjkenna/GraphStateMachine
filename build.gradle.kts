@@ -5,6 +5,19 @@ plugins {
     kotlin("jvm") version "2.1.0"
     id("org.jetbrains.dokka") version "1.9.0"
     `maven-publish`
+    id("jacoco")
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
 }
 
 repositories {
@@ -65,12 +78,10 @@ publishing {
             from(components["java"])
             groupId = "com.github.mdjkenna"
             artifactId = "GraphStateMachine"
-            version = "0.0.0"
+            version = "0.3.4"
 
-            // Include the sources jar
             artifact(tasks.named("sourcesJar"))
 
-            // Include the javadoc jar
             artifact(tasks.named("dokkaJavadocJar"))
         }
     }

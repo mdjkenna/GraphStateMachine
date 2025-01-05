@@ -2,7 +2,10 @@ package mdk.test
 
 import mdk.gsm.graph.traversal.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.test.utils.*
+import mdk.test.utils.AssertionUtils
+import mdk.test.utils.Test15VertexTransitionFlags
+import mdk.test.utils.TestBuilderUtils
+import mdk.test.utils.TestEdgeTransitionFlags
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isFalse
@@ -112,13 +115,13 @@ class TestCyclicGraphTraversal {
                 graphStateMachine = graphStateMachine
             )
 
-            expectThat(graphStateMachine.currentState.hasPrevious)
+            expectThat(graphStateMachine.currentState.isWithinBounds)
                 .isTrue()
 
             graphStateMachine.dispatch(GraphStateMachineAction.Previous)
         }
 
-        expectThat(graphStateMachine.currentState.hasPrevious)
+        expectThat(graphStateMachine.currentState.isWithinBounds)
             .isFalse()
     }
 }

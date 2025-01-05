@@ -3,8 +3,8 @@
 package mdk.gsm.state
 
 import mdk.gsm.graph.IVertex
-import mdk.gsm.graph.traversal.GraphTraversal
 import mdk.gsm.graph.traversal.EdgeTraversalType
+import mdk.gsm.graph.traversal.GraphTraversal
 
 /**
  * A class representing a graph-based state machine.
@@ -72,9 +72,9 @@ class GraphStateMachine<V, F> internal constructor(
 
                 updateProgress { current ->
                     if (next != null) {
-                        TraversalState(next, hasMore = true, hasPrevious = true)
+                        TraversalState(next)
                     } else {
-                        current.copy(hasMore = false, hasPrevious = true)
+                        current.copy(traversalBounds = TraversalBounds.BeyondLast)
                     }
                 }
             }
@@ -84,9 +84,9 @@ class GraphStateMachine<V, F> internal constructor(
 
                 updateProgress { current ->
                     if (previousStep != null) {
-                        TraversalState(previousStep, hasPrevious = true, hasMore = true)
+                        TraversalState(previousStep)
                     } else {
-                        current.copy(hasPrevious = false, hasMore = true)
+                        current.copy(traversalBounds = TraversalBounds.BeforeFirst)
                     }
                 }
             }

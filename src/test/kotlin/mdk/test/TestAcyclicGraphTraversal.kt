@@ -4,12 +4,12 @@ import mdk.gsm.graph.traversal.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachine
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.utils.AssertionUtils.expectPath
-import mdk.test.utils.TestEdgeTransitionFlags
 import mdk.test.utils.TestBuilderUtils
 import mdk.test.utils.TestBuilderUtils.v2
 import mdk.test.utils.TestBuilderUtils.v3
 import mdk.test.utils.TestBuilderUtils.v5
 import mdk.test.utils.TestBuilderUtils.v6
+import mdk.test.utils.TestEdgeTransitionFlags
 import mdk.test.utils.TestVertex
 import org.junit.Before
 import org.junit.Test
@@ -54,7 +54,7 @@ class TestAcyclicGraphTraversal(
 
         do {
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
-        } while (graphStateMachine.currentState.hasMore)
+        } while (graphStateMachine.currentState.isWithinBounds)
 
         expectPath(
             expectedPath = listOf("1", "3", "5", "6"),
@@ -69,7 +69,7 @@ class TestAcyclicGraphTraversal(
 
         do {
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
-        } while (graphStateMachine.currentState.hasMore)
+        } while (graphStateMachine.currentState.isWithinBounds)
 
         expectPath(
             expectedPath = listOf("1", "2", "4", "8"),
@@ -86,7 +86,7 @@ class TestAcyclicGraphTraversal(
 
         for (step in listOf(v3, v5, v6)) {
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
-            val nextStep = graphStateMachine.currentState.value
+            val nextStep = graphStateMachine.currentState.vertex
             expectThat(nextStep.id).isEqualTo(step.id)
         }
 
@@ -99,7 +99,7 @@ class TestAcyclicGraphTraversal(
 
         expectThat(expectedNextStep.id)
             .isEqualTo(
-                graphStateMachine.currentState.value.id
+                graphStateMachine.currentState.vertex.id
             )
 
         graphStateMachine.dispatch(GraphStateMachineAction.Reset)
@@ -109,20 +109,21 @@ class TestAcyclicGraphTraversal(
 
         for (step in listOf(v3, v6)) {
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
-            val nextStep = graphStateMachine.currentState.value
+            val nextStep = graphStateMachine.currentState.vertex
             expectThat(nextStep.id)
                 .isEqualTo(step.id)
         }
 
         repeat(10) {
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
-            expectThat(graphStateMachine.currentState.value.id)
+
+            expectThat(graphStateMachine.currentState.vertex.id)
                 .isEqualTo(v6.id)
 
-            expectThat(graphStateMachine.currentState.hasPrevious)
+            expectThat(graphStateMachine.currentState.isNotBeforeFirst)
                 .isTrue()
 
-            expectThat(graphStateMachine.currentState.hasMore)
+            expectThat(graphStateMachine.currentState.isNotBeyondLast)
                 .isFalse()
         }
     }

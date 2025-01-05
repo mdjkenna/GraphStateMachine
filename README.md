@@ -1,5 +1,6 @@
+![Build](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/buildAndTest.yml/badge.svg)
+[![codecov](https://codecov.io/gh/mdjkenna/GraphStateMachine/branch/master/graph/badge.svg)](https://codecov.io/gh/mdjkenna/GraphStateMachine)
 [![](https://jitpack.io/v/mdjkenna/GraphStateMachine.svg)](https://jitpack.io/#mdjkenna/GraphStateMachine)
-![Build](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/workflow.yml/badge.svg)
 
 # Graph State Machine
 
