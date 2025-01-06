@@ -50,17 +50,22 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 }
 
-// Task to generate sources jar
-tasks.register<Jar>("sourcesJar") {
-    from(sourceSets.main.get().allSource)
-    archiveClassifier.set("sources")
+java {
+    withSourcesJar()
 }
 
-// Task to generate Dokka Javadoc jar
-tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn(tasks.named("dokkaJavadoc"))
-    from(tasks.named("dokkaJavadoc"))
+val dokkaJar by tasks.registering(Jar::class) {
+    dependsOn("dokkaHtml")
     archiveClassifier.set("javadoc")
+    from(tasks.named("dokkaHtml"))
+}
+
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+    dokkaSourceSets {
+        named("main") {
+            reportUndocumented.set(true)
+        }
+    }
 }
 
 tasks.dokkaJavadoc.configure {
@@ -76,13 +81,19 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-            groupId = "com.github.mdjkenna"
             artifactId = "GraphStateMachine"
-            version = "0.3.4"
-
-            artifact(tasks.named("sourcesJar"))
-
-            artifact(tasks.named("dokkaJavadocJar"))
+            artifact(dokkaJar.get())
+            pom {
+                name.set("GraphStateMachine")
+                description.set("A Kotlin library for creating graph based state machines")
+                url.set("https://github.com/mdjkenna/GraphStateMachine")
+                licenses {
+                    license {
+                        name.set("Apache License 2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                    }
+                }
+            }
         }
     }
 }
