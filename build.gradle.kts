@@ -3,9 +3,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("org.jetbrains.dokka") version "1.9.0"
-    `maven-publish`
     id("jacoco")
+    `maven-publish`
 }
 
 jacoco {
@@ -26,6 +25,7 @@ repositories {
 }
 
 group = "com.github.mdjkenna"
+version = "0.3.7"
 
 tasks.test {
     useJUnit()
@@ -52,29 +52,7 @@ dependencies {
 
 java {
     withSourcesJar()
-}
-
-val dokkaJar by tasks.registering(Jar::class) {
-    dependsOn("dokkaHtml")
-    archiveClassifier.set("javadoc")
-    from(tasks.named("dokkaHtml"))
-}
-
-tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
-    dokkaSourceSets {
-        named("main") {
-            reportUndocumented.set(true)
-        }
-    }
-}
-
-tasks.dokkaJavadoc.configure {
-    dokkaSourceSets {
-        named("main") {
-            includeNonPublic.set(true) // Exclude non-public members
-            reportUndocumented.set(true) // Warn about undocumented members
-        }
-    }
+    withJavadocJar()
 }
 
 publishing {
@@ -82,11 +60,13 @@ publishing {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
             artifactId = "GraphStateMachine"
-            artifact(dokkaJar.get())
+            version = "0.3.7"
+
             pom {
                 name.set("GraphStateMachine")
                 description.set("A Kotlin library for creating graph based state machines")
                 url.set("https://github.com/mdjkenna/GraphStateMachine")
+
                 licenses {
                     license {
                         name.set("Apache License 2.0")
@@ -94,6 +74,7 @@ publishing {
                     }
                 }
             }
+
         }
     }
 }
