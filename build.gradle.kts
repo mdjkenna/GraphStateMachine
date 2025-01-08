@@ -1,10 +1,15 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+object Props {
+    const val VERSION = "0.3.8"
+}
+
 plugins {
     kotlin("jvm") version "2.1.0"
     id("jacoco")
     `maven-publish`
+    id("org.jetbrains.dokka") version "1.9.0"
 }
 
 jacoco {
@@ -21,14 +26,18 @@ tasks.jacocoTestReport {
 
 repositories {
     mavenCentral()
-    maven("https://jitpack.io")
 }
 
 group = "com.github.mdjkenna"
-version = "0.3.7"
+version = Props.VERSION
 
 tasks.test {
     useJUnit()
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
 kotlin {
@@ -43,24 +52,36 @@ tasks.withType<KotlinCompile> {
     }
 }
 
+tasks.named<Jar>("javadocJar") {
+    from(tasks.named("dokkaJavadoc"))
+    archiveClassifier.set("javadoc")
+}
+
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.0")
+    implementation(kotlin("stdlib"))
     testImplementation(kotlin("test"))
     testImplementation("io.strikt:strikt-core:0.34.0")
     testImplementation("junit:junit:4.13.2")
 }
 
-java {
-    withSourcesJar()
-    withJavadocJar()
+tasks.dokkaJavadoc {
+    dokkaSourceSets {
+        named("main") {
+            includeNonPublic.set(false)
+            skipDeprecated.set(true)
+            reportUndocumented.set(true)
+            jdkVersion.set(8)
+        }
+    }
 }
 
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            from(components["java"])
             artifactId = "GraphStateMachine"
-            version = "0.3.7"
+            version = Props.VERSION
+
+            from(components["java"])
 
             pom {
                 name.set("GraphStateMachine")
