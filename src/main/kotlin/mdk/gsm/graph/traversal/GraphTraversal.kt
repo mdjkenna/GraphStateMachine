@@ -25,7 +25,7 @@ internal abstract class GraphTraversal<V, F>(
     fun movePrevious(): V? {
         val left = pathHead.left ?: return null
 
-        visited.remove(left.vertex.id)
+        visited.remove(pathHead.vertex.id)
         pathHead = left
         return left.vertex
     }

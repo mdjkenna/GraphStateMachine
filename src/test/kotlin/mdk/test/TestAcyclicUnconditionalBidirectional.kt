@@ -9,6 +9,8 @@ import mdk.gsm.state.IEdgeTransitionFlags
 import org.junit.Assert
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import strikt.api.expectThat
+import strikt.assertions.isEqualTo
 import kotlin.test.Test
 
 @RunWith(Parameterized::class)
@@ -42,6 +44,17 @@ class TestGraphBidirectionalTraversal (
         } while (graphStateMachine.currentState.isWithinBounds)
 
         Assert.assertEquals(parameters.expectedForwardPath.reversed(), backwardsUpdated.map { it.id })
+
+        forwardUpdated.clear()
+
+        do {
+            forwardUpdated.add(graphStateMachine.currentState.vertex)
+            graphStateMachine.dispatch(GraphStateMachineAction.Next)
+        } while (graphStateMachine.currentState.isWithinBounds)
+
+        expectThat(forwardUpdated.map(Vertex::id)) {
+            isEqualTo(parameters.expectedForwardPath)
+        }
     }
 
     data class Parameters(
