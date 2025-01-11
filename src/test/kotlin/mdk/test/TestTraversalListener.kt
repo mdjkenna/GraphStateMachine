@@ -15,7 +15,7 @@ class TestGraphStateMachineStateUpdatedListener {
     @Test
     fun `the on state updated listener should receive state updates including the current state when set unless specified otherwise`() {
 
-        val updatedStates = ArrayList<TraversalState<TestVertex>>()
+        val updatedStates = ArrayList<TraversalState<TestVertex, String>>()
 
         val graphStateMachine = TestBuilderUtils.build8VertexGraphStateMachine(
             testProgressionFlags = TestEdgeTransitionFlags(),

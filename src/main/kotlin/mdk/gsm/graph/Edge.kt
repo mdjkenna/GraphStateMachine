@@ -11,12 +11,12 @@ import mdk.gsm.state.IEdgeTransitionFlags
  * @property from The vertex the edge is coming from.
  * @property to The id of the vertex the edge is going to.
  */
-class Edge<out V, F> internal constructor(
+class Edge<out V, I, F> internal constructor(
     val order: Int,
     val from: V,
-    val to: String,
-    private val progressionHandler: EdgeTransitionHandler<V, F>?
-) where F : IEdgeTransitionFlags, V : IVertex {
+    val to: I,
+    private val progressionHandler: EdgeTransitionHandler<V, I, F>?
+) where F : IEdgeTransitionFlags, V : IVertex<I> {
 
     internal fun canProceed(flags: F): Boolean {
         val ph = progressionHandler

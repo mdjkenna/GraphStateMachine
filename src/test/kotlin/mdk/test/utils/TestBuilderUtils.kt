@@ -26,8 +26,8 @@ object TestBuilderUtils {
         testProgressionFlags: TestEdgeTransitionFlags,
         edgeTraversalType: EdgeTraversalType,
         add7to3cycle : Boolean = false,
-    ): GraphStateMachine<TestVertex, TestEdgeTransitionFlags> {
-        return buildGraphStateMachineWithTransitionFlags<TestVertex, TestEdgeTransitionFlags> {
+    ): GraphStateMachine<TestVertex, String, TestEdgeTransitionFlags> {
+        return buildGraphStateMachineWithTransitionFlags<TestVertex, String, TestEdgeTransitionFlags> {
             setEdgeTransitionFlags(testProgressionFlags)
             setTraversalType(edgeTraversalType)
 
@@ -116,8 +116,8 @@ object TestBuilderUtils {
     fun build15VertexGraphStateMachine(
         testProgressionFlags: Test15VertexTransitionFlags,
         edgeTraversalType: EdgeTraversalType
-    ): GraphStateMachine<TestVertex, Test15VertexTransitionFlags> {
-        return buildGraphStateMachineWithTransitionFlags<TestVertex, Test15VertexTransitionFlags> {
+    ): GraphStateMachine<TestVertex, String, Test15VertexTransitionFlags> {
+        return buildGraphStateMachineWithTransitionFlags<TestVertex, String, Test15VertexTransitionFlags> {
             setEdgeTransitionFlags(testProgressionFlags)
             setTraversalType(edgeTraversalType)
 

@@ -4,11 +4,11 @@ import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.IEdgeTransitionFlags
 
-internal class ForwardGraphTraversal<V, F>(
-    graph: Graph<V, F>,
+internal class ForwardGraphTraversal<V, I, F>(
+    graph: Graph<V, I, F>,
     startVertex: V,
     val skipCycles : Boolean = true
-) : GraphTraversal<V, F>(startVertex, graph) where V : IVertex, F : IEdgeTransitionFlags {
+) : GraphTraversal<V, I, F>(startVertex, graph) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
     override fun next(flags: F): V? {
 

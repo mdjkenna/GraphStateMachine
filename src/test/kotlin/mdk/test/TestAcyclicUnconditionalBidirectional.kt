@@ -1,11 +1,11 @@
 package mdk.test
 
 import mdk.gsm.builder.buildGraphStateMachineWithTransitionFlags
-import mdk.gsm.graph.Vertex
 import mdk.gsm.graph.traversal.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachine
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.IEdgeTransitionFlags
+import mdk.gsm.util.StringVertex
 import org.junit.Assert
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -18,12 +18,12 @@ class TestGraphBidirectionalTraversal (
     private val parameters: Parameters,
 ) {
 
-    val graphStateMachine : GraphStateMachine<Vertex, IEdgeTransitionFlags.None>
+    val graphStateMachine : GraphStateMachine<StringVertex, String, IEdgeTransitionFlags.None>
         get() = parameters.graphStateMachine
 
     @Test
     fun `moving forwards then backwards should produce paths that mirror one another when graph is acyclic and without conditions`() {
-        val forwardUpdated = ArrayList<Vertex>()
+        val forwardUpdated = ArrayList<StringVertex>()
 
         do {
             forwardUpdated.add(graphStateMachine.currentState.vertex)
@@ -37,7 +37,7 @@ class TestGraphBidirectionalTraversal (
         Assert.assertEquals(parameters.expectedForwardPath, forwardTraced)
         Assert.assertEquals(parameters.expectedForwardPath, forwardUpdated.map { it.id })
 
-        val backwardsUpdated = ArrayList<Vertex>()
+        val backwardsUpdated = ArrayList<StringVertex>()
         do {
             backwardsUpdated.add(graphStateMachine.currentState.vertex)
             graphStateMachine.dispatch(GraphStateMachineAction.Previous)
@@ -52,13 +52,13 @@ class TestGraphBidirectionalTraversal (
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
         } while (graphStateMachine.currentState.isWithinBounds)
 
-        expectThat(forwardUpdated.map(Vertex::id)) {
+        expectThat(forwardUpdated.map(StringVertex::id)) {
             isEqualTo(parameters.expectedForwardPath)
         }
     }
 
     data class Parameters(
-        val graphStateMachine : GraphStateMachine<Vertex, IEdgeTransitionFlags.None>,
+        val graphStateMachine : GraphStateMachine<StringVertex, String, IEdgeTransitionFlags.None>,
         val expectedForwardPath: List<String>
     )
 
@@ -77,16 +77,16 @@ class TestGraphBidirectionalTraversal (
         }
 
         private fun parameters2(edgeTransitionType: EdgeTraversalType) : Parameters {
-            val step1 = Vertex("1")
-            val step2a = Vertex("2A")
-            val step2b = Vertex("2B")
-            val step3 = Vertex("3")
-            val step3a = Vertex("3A")
-            val step3b = Vertex("3B")
-            val step4 = Vertex("4")
-            val step5 = Vertex("5")
+            val step1 = StringVertex("1")
+            val step2a = StringVertex("2A")
+            val step2b = StringVertex("2B")
+            val step3 = StringVertex("3")
+            val step3a = StringVertex("3A")
+            val step3b = StringVertex("3B")
+            val step4 = StringVertex("4")
+            val step5 = StringVertex("5")
 
-            val graph = buildGraphStateMachineWithTransitionFlags<Vertex, IEdgeTransitionFlags.None> {
+            val graph = buildGraphStateMachineWithTransitionFlags<StringVertex, String, IEdgeTransitionFlags.None> {
                 setTraversalType(edgeTransitionType)
 
                 buildGraph(step1) {
@@ -122,28 +122,28 @@ class TestGraphBidirectionalTraversal (
             return Parameters(
                 graph,
                 listOf(step1, step2a, step3, step5, step2b, step3a, step4, step3b).map(
-                    Vertex::id
+                    StringVertex::id
                 )
             )
 
         }
 
         private fun parameters1(edgeTraversalType: EdgeTraversalType): Parameters {
-            val graphStateMachine = buildGraphStateMachineWithTransitionFlags<Vertex, IEdgeTransitionFlags.None> {
-                val step1 = Vertex("1")
+            val graphStateMachine = buildGraphStateMachineWithTransitionFlags<StringVertex, String, IEdgeTransitionFlags.None> {
+                val step1 = StringVertex("1")
                 setTraversalType(edgeTraversalType)
 
                 buildGraph(step1) {
-                    val step2a = Vertex("2A")
-                    val step2b = Vertex("2B")
-                    val step3a = Vertex("3A")
-                    val step3b = Vertex("3B")
-                    val step3c = Vertex("3C")
-                    val step4a = Vertex("4A")
-                    val step4b = Vertex("4B")
-                    val step5 = Vertex("5")
-                    val step6 = Vertex("6")
-                    val step7 = Vertex("7")
+                    val step2a = StringVertex("2A")
+                    val step2b = StringVertex("2B")
+                    val step3a = StringVertex("3A")
+                    val step3b = StringVertex("3B")
+                    val step3c = StringVertex("3C")
+                    val step4a = StringVertex("4A")
+                    val step4b = StringVertex("4B")
+                    val step5 = StringVertex("5")
+                    val step6 = StringVertex("6")
+                    val step7 = StringVertex("7")
 
 
                     addVertex(step1) {

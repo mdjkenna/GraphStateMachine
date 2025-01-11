@@ -17,23 +17,23 @@ import mdk.gsm.graph.traversal.GraphTraversal
  *
  * @property flags The edge progression flags which are passed to each edge to determine if traversal can occur.
  */
-class GraphStateMachine<V, F> internal constructor(
-    private val graphTraversal: GraphTraversal<V, F>,
+class GraphStateMachine<V, I, F> internal constructor(
+    private val graphTraversal: GraphTraversal<V, I, F>,
     val flags: F,
     internal val edgeTraversalType: EdgeTraversalType
-) where V : IVertex, F : IEdgeTransitionFlags {
+) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
-    var currentState = TraversalState<V>(graphTraversal.currentStep())
+    var currentState = TraversalState<V, I>(graphTraversal.currentStep())
         private set
 
-    private var onStateUpdatedListener : ((TraversalState<V>) -> Unit)? = null
+    private var onStateUpdatedListener : ((TraversalState<V, I>) -> Unit)? = null
 
     /**
      * Sets a listener for state updates as a result of a dispatched action
      */
     fun setOnStateUpdatedListener(
         readCurrent: Boolean = true,
-        listener: (TraversalState<V>) -> Unit
+        listener: (TraversalState<V, I>) -> Unit
     ) {
         onStateUpdatedListener = listener
 
@@ -100,7 +100,7 @@ class GraphStateMachine<V, F> internal constructor(
     }
 
     private inline fun updateProgress(
-        crossinline update : (current : TraversalState<V>) -> TraversalState<V>
+        crossinline update : (current : TraversalState<V, I>) -> TraversalState<V, I>
     ) {
         val newProgress = update(currentState)
         currentState = newProgress

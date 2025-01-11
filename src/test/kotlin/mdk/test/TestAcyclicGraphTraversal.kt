@@ -26,7 +26,7 @@ class TestAcyclicGraphTraversal(
 ) {
 
     class ConditionalTraversalTestParameters(
-        val graphStateMachine: GraphStateMachine<TestVertex, TestEdgeTransitionFlags>,
+        val graphStateMachine: GraphStateMachine<TestVertex, String, TestEdgeTransitionFlags>,
         val edgeTraversalType: EdgeTraversalType
     ) {
         override fun toString(): String {

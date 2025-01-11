@@ -8,12 +8,12 @@ import strikt.assertions.isEqualTo
 
 object AssertionUtils {
 
-    fun <V, F> expectPath(
-        expectedPath : List<String>,
-        graphStateMachine: GraphStateMachine<V, F>
-    ) where V : IVertex, F : IEdgeTransitionFlags {
+    fun <V, I, F> expectPath(
+        expectedPath : List<I>,
+        graphStateMachine: GraphStateMachine<V, I, F>
+    ) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
-        expectThat(graphStateMachine.tracePath().map(IVertex::id))
+        expectThat(graphStateMachine.tracePath().map(IVertex<I>::id))
             .isEqualTo(expectedPath)
 
         expectThat(graphStateMachine.currentState.vertex.id)

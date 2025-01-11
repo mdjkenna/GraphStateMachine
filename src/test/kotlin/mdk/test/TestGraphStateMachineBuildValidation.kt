@@ -15,7 +15,7 @@ class TestGraphStateMachineBuildValidation {
     fun `missing vertices causing dangling edges are detected in the graph`() {
 
         expectCatching {
-            buildGraphStateMachine<TestVertex> {
+            buildGraphStateMachine<TestVertex, String> {
                 buildGraph(TestVertex("1")) {
                     addVertex(TestVertex("1")) {
                         addOutgoingEdge {
@@ -31,7 +31,7 @@ class TestGraphStateMachineBuildValidation {
     fun `adding duplicate vertex identifiers to the graph results in an error`() {
 
         expectCatching {
-            buildGraphStateMachine<TestVertex> {
+            buildGraphStateMachine<TestVertex, String> {
                 buildGraph(TestVertex("1")) {
                     addVertex(TestVertex("1")) {
                         addOutgoingEdge {
@@ -56,7 +56,7 @@ class TestGraphStateMachineBuildValidation {
     @Test
     fun `specifying a transition flag type and not setting results in error`() {
         expectCatching {
-            buildGraphStateMachineWithTransitionFlags<TestVertex, TestEdgeTransitionFlags> {
+            buildGraphStateMachineWithTransitionFlags<TestVertex, String, TestEdgeTransitionFlags> {
                 buildGraph(TestVertex("1")) {
                     addVertex(TestVertex("1")) {
                         addOutgoingEdge {
@@ -73,7 +73,7 @@ class TestGraphStateMachineBuildValidation {
     @Test
     fun `not specifying a transition flag type and not setting results proceeds ok`() {
         expectCatching {
-            buildGraphStateMachine<TestVertex> {
+            buildGraphStateMachine<TestVertex, String> {
                 buildGraph(TestVertex("1")) {
                     addVertex(TestVertex("1")) {
                         addOutgoingEdge {

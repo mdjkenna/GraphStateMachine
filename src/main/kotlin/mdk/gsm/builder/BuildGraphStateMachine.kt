@@ -4,26 +4,42 @@ package mdk.gsm.builder
 
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
-import mdk.gsm.graph.traversal.GraphTraversalFactory
 import mdk.gsm.graph.traversal.EdgeTraversalType
+import mdk.gsm.graph.traversal.GraphTraversalFactory
 import mdk.gsm.state.GraphStateMachine
 import mdk.gsm.state.IEdgeTransitionFlags
 
 /**
- * Builds a graph state machine using the provided scope functions.
+ * Constructs a `GraphStateMachine` with custom transition flags, enabling fine-grained control over state transitions.
+ * This function provides a DSL-based entry point for building a state machine represented by a directed graph.  The DSL (Domain Specific Language)
+ * leverages Kotlin's type-safe builder pattern and function literals with receiver [builderFunction] to define state machine configurations.
  *
- * @return A configured graph state machine.
+ * Transition flags, represented by the type parameter `F`, enable injecting custom logic during transitions. This allows for complex
+ * behavior such as conditional transitions and side effects. The [F] type must implement `IEdgeTransitionFlags`.
+ * For simpler state machines without custom flags, consider using [buildGraphStateMachine] instead.
+ *
+ * @param V The type of the vertices (states). Must implement {@link IVertex}.
+ * @param I The type of the vertex identifiers.
+ * @param F The type of the edge transition flags. Must implement {@link IEdgeTransitionFlags}.
+ * @param builderFunction The builder scope function for configuring the state machine.
+ * @return A fully configured `GraphStateMachine` instance.
+ * @throws IllegalStateException If the state machine is not configured correctly when attempting to build
+ *
+ * @see IVertex
+ * @see IEdgeTransitionFlags
+ * @see GraphStateMachineBuilderScope
+ * @see buildGraphStateMachine for building without custom transition flags.
  */
 @GsmBuilderScope
-inline fun <reified V, reified F> buildGraphStateMachineWithTransitionFlags(
-    crossinline scopeFun : GraphStateMachineBuilderScope<V, F>.() -> Unit
-) : GraphStateMachine<V, F>
-    where V : IVertex, F : IEdgeTransitionFlags {
+inline fun <reified V, reified I, reified F> buildGraphStateMachineWithTransitionFlags(
+    crossinline builderFunction : GraphStateMachineBuilderScope<V, I, F>.() -> Unit
+) : GraphStateMachine<V, I, F>
+    where V : IVertex<I>, F : IEdgeTransitionFlags {
 
-    val graphStateMachineBuilder = GraphStateMachineBuilder<V, F>()
+    val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, F>()
 
     val graphStateMachineBuilderScope = GraphStateMachineBuilderScope(graphStateMachineBuilder)
-    scopeFun(graphStateMachineBuilderScope)
+    builderFunction(graphStateMachineBuilderScope)
 
     if (graphStateMachineBuilder.edgeTransitionFlags == null) {
         if (F::class.isInstance(IEdgeTransitionFlags.None)) {
@@ -46,12 +62,11 @@ inline fun <reified V, reified F> buildGraphStateMachineWithTransitionFlags(
  */
 
 @GsmBuilderScope
-inline fun <reified V> buildGraphStateMachine(
-    crossinline scopeFun : GraphStateMachineBuilderScope<V, IEdgeTransitionFlags.None>.() -> Unit
-) : GraphStateMachine<V, IEdgeTransitionFlags.None>
-        where V : IVertex {
+inline fun <reified V, reified I> buildGraphStateMachine(
+    crossinline scopeFun : GraphStateMachineBuilderScope<V, I, IEdgeTransitionFlags.None>.() -> Unit
+) : GraphStateMachine<V, I, IEdgeTransitionFlags.None> where V : IVertex<I> {
 
-    val graphStateMachineBuilder = GraphStateMachineBuilder<V, IEdgeTransitionFlags.None>()
+    val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, IEdgeTransitionFlags.None>()
     graphStateMachineBuilder.edgeTransitionFlags = IEdgeTransitionFlags.None
 
     val graphStateMachineBuilderScope = GraphStateMachineBuilderScope(graphStateMachineBuilder)
@@ -61,9 +76,9 @@ inline fun <reified V> buildGraphStateMachine(
 }
 
 @GsmBuilderScope
-class GraphStateMachineBuilderScope<V, F> @PublishedApi internal constructor(
-    internal val graphStateMachineBuilder: GraphStateMachineBuilder<V, F>
-) where V : IVertex, F : IEdgeTransitionFlags {
+class GraphStateMachineBuilderScope<V, I, F> @PublishedApi internal constructor(
+    internal val graphStateMachineBuilder: GraphStateMachineBuilder<V, I, F>
+) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
     /**
      * Allows simply setting the graph for cases where one is already created.
@@ -71,7 +86,7 @@ class GraphStateMachineBuilderScope<V, F> @PublishedApi internal constructor(
      * @param startAtVertex The vertex to start at. Must be a vertex in the graph.
      * @param graph The graph to set.
      */
-    fun setWorkflowGraph(startAtVertex : V, graph: Graph<V, F>) {
+    fun setWorkflowGraph(startAtVertex : V, graph: Graph<V, I, F>) {
         graphStateMachineBuilder.graph = graph
         graphStateMachineBuilder.startVertex = startAtVertex
     }
@@ -82,8 +97,8 @@ class GraphStateMachineBuilderScope<V, F> @PublishedApi internal constructor(
      * @param startAtVertex The vertex to start at. Must be a vertex in the graph.
      * @param scopeConsumer The scope consumer to build the graph.
      */
-    fun buildGraph(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, F>.() -> Unit) {
-        val graphGraphBuilder = GraphBuilder<V, F>()
+    fun buildGraph(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, I, F>.() -> Unit) {
+        val graphGraphBuilder = GraphBuilder<V, I, F>()
         val graphBuilderScope = GraphBuilderScope(graphGraphBuilder)
         scopeConsumer(graphBuilderScope)
         graphStateMachineBuilder.graph = graphGraphBuilder.build()
@@ -118,14 +133,14 @@ class GraphStateMachineBuilderScope<V, F> @PublishedApi internal constructor(
     }
 }
 
-class GraphStateMachineBuilder<V, F> @PublishedApi internal constructor() where V : IVertex, F : IEdgeTransitionFlags {
-    var graph : Graph<V, F>? = null
+class GraphStateMachineBuilder<V, I, F> @PublishedApi internal constructor() where V : IVertex<I>, F : IEdgeTransitionFlags {
+    var graph : Graph<V, I, F>? = null
     var startVertex : V? = null
     var edgeTransitionFlags : F? = null
     var traversalType : EdgeTraversalType = EdgeTraversalType.RetrogradeAcyclic
 
     @PublishedApi
-    internal fun build(): GraphStateMachine<V, F> {
+    internal fun build(): GraphStateMachine<V, I, F> {
         val _graph = graph
         val _startVertex = startVertex
         val _edgeTransitionFlags = edgeTransitionFlags

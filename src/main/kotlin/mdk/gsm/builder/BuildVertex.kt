@@ -1,12 +1,14 @@
 package mdk.gsm.builder
 
-import mdk.gsm.graph.*
+import mdk.gsm.graph.Edge
+import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.VertexContainer
 import mdk.gsm.state.IEdgeTransitionFlags
 
 @GsmBuilderScope
-class VertexBuilderScope<V, F> internal constructor(
-    private val vertexContainerBuilder: VertexBuilder<V, F>
-) where V : IVertex, F : IEdgeTransitionFlags {
+class VertexBuilderScope<V, I, F> internal constructor(
+    private val vertexContainerBuilder: VertexBuilder<V, I, F>
+) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
     /**
      * Adds an outgoing edge to the vertex.
@@ -15,35 +17,36 @@ class VertexBuilderScope<V, F> internal constructor(
      */
     fun addOutgoingEdge(
         autoOrder : Boolean = true,
-        scopeConsumer : EdgeBuilderScope<V, F>.() -> Unit
+        scopeConsumer : EdgeBuilderScope<V, I, F>.() -> Unit
     ) {
-        val edgeBuilder = EdgeBuilder<V, F>(vertexContainerBuilder.stepInstance)
+        val edgeBuilder = EdgeBuilder<V, I, F>(vertexContainerBuilder.stepInstance)
+
+        scopeConsumer(EdgeBuilderScope(edgeBuilder))
         if (autoOrder) {
             edgeBuilder.order = vertexContainerBuilder.numberOfEdges
         }
 
-        scopeConsumer(EdgeBuilderScope(edgeBuilder))
         vertexContainerBuilder.addOutgoingEdge(
             edgeBuilder.build()
         )
     }
 }
 
-internal class VertexBuilder<V, F>(
+internal class VertexBuilder<V, I, F>(
     internal val stepInstance: V
-) where V : IVertex, F : IEdgeTransitionFlags {
+) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
-    private val adjacent = HashMap<String, Edge<V, F>>()
+    private val adjacent = HashMap<I, Edge<V, I, F>>()
 
     val numberOfEdges: Int
         get() = adjacent.size
 
-    fun addOutgoingEdge(edge: Edge<V, F>) {
+    fun addOutgoingEdge(edge: Edge<V, I, F>) {
         adjacent[edge.to] = edge
     }
 
-    fun build(): VertexContainer<V, F> {
-        val sortedEdges : List<Edge<V, F>> = adjacent.values.sortedBy {
+    fun build(): VertexContainer<V, I, F> {
+        val sortedEdges : List<Edge<V, I, F>> = adjacent.values.sortedBy {
             it.order
         }
 

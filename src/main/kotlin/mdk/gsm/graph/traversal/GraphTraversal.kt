@@ -4,15 +4,15 @@ import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.IEdgeTransitionFlags
 
-internal abstract class GraphTraversal<V, F>(
+internal abstract class GraphTraversal<V, I, F>(
     val startVertex: V,
-    protected val graph: Graph<V, F>
-) where V : IVertex, F : IEdgeTransitionFlags {
+    protected val graph: Graph<V, I, F>
+) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
     protected var pathHead = PathNode(left = null, vertex = startVertex)
 
-    protected val visited: MutableMap<String, Int> = run {
-        val map = HashMap<String, Int>()
+    protected val visited: MutableMap<I, Int> = run {
+        val map = HashMap<I, Int>()
         map
     }
 
