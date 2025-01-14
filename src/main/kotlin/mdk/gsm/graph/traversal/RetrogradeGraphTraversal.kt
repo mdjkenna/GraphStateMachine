@@ -9,7 +9,7 @@ internal class RetrogradeGraphTraversal<V, I, F>(
     startVertex: V
 ) : GraphTraversal<V, I, F>(startVertex, graph) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
-    override fun next(flags: F): V? {
+    override fun moveNext(flags: F): V? {
 
         visited[pathHead.vertex.id] = VtxState.GRAY_INITIAL
 

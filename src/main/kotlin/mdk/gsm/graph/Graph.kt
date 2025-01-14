@@ -12,12 +12,12 @@ import mdk.gsm.state.IEdgeTransitionFlags
  * The `Graph` class facilitates efficient lookups of vertices and their connected
  * edges. Defining all _possible_ state transitions, the [Graph] class forms the main scaffolding for the state machine's navigation logic.
  *
- * The [Graph] class is immutable if the vertex implementations are immutable.
+ * The [Graph] class is immutable if the addVertex implementations are immutable.
  *
  * @see mdk.gsm.builder.buildGraphOnly
  * @see mdk.gsm.builder.GraphStateMachineBuilderScope.buildGraph
  * @param V The type of vertices stored in this graph. Must implement [IVertex].
- * @param I The type of the vertex ID. Must correspond to the type parameter of [IVertex] implemented by [V].
+ * @param I The type of the addVertex ID. Must correspond to the type parameter of [IVertex] implemented by [V].
  * @param F The type of flags used for edge transitions. Must implement [IEdgeTransitionFlags].
  */
 class Graph<V, I, F> internal constructor(

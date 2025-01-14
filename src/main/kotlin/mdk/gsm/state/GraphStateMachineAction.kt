@@ -2,12 +2,12 @@ package mdk.gsm.state
 
 sealed class GraphStateMachineAction {
     /**
-     * Moves state to the next vertex in the graph if available
+     * Moves state to the next addVertex in the graph if available
      */
     data object Next : GraphStateMachineAction()
 
     /**
-     * Moves state to the previous vertex in the graph unconditionally
+     * Moves state to the previous addVertex in the graph unconditionally
      */
     data object Previous : GraphStateMachineAction()
 

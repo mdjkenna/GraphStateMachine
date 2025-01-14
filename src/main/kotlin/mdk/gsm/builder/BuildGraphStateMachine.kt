@@ -7,6 +7,7 @@ import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.traversal.EdgeTraversalType
 import mdk.gsm.graph.traversal.GraphTraversalFactory
 import mdk.gsm.state.GraphStateMachine
+import mdk.gsm.state.GsmConfig
 import mdk.gsm.state.IEdgeTransitionFlags
 
 /**
@@ -19,7 +20,7 @@ import mdk.gsm.state.IEdgeTransitionFlags
  * For simpler state machines without custom flags, consider using [buildGraphStateMachine] instead.
  *
  * @param V The type of the vertices (states). Must implement {@link IVertex}.
- * @param I The type of the vertex identifiers.
+ * @param I The type of the addVertex identifiers.
  * @param F The type of the edge transition flags. Must implement {@link IEdgeTransitionFlags}.
  * @param builderFunction The builder scope function for configuring the state machine.
  * @return A fully configured `GraphStateMachine` instance.
@@ -83,7 +84,7 @@ class GraphStateMachineBuilderScope<V, I, F> @PublishedApi internal constructor(
     /**
      * Allows simply setting the graph for cases where one is already created.
      *
-     * @param startAtVertex The vertex to start at. Must be a vertex in the graph.
+     * @param startAtVertex The addVertex to start at. Must be a addVertex in the graph.
      * @param graph The graph to set.
      */
     fun setWorkflowGraph(startAtVertex : V, graph: Graph<V, I, F>) {
@@ -94,7 +95,7 @@ class GraphStateMachineBuilderScope<V, I, F> @PublishedApi internal constructor(
     /**
      * Builds a graph using the provided scope consumer.
      *
-     * @param startAtVertex The vertex to start at. Must be a vertex in the graph.
+     * @param startAtVertex The addVertex to start at. Must be a addVertex in the graph.
      * @param scopeConsumer The scope consumer to build the graph.
      */
     fun buildGraph(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, I, F>.() -> Unit) {
@@ -123,13 +124,46 @@ class GraphStateMachineBuilderScope<V, I, F> @PublishedApi internal constructor(
     }
 
     /**
-     * Sets the start vertex for the graph state machine.
-     * The start vertex must be set before the graph state machine can be built.
+     * Sets the start addVertex for the graph state machine.
+     * The start addVertex must be set before the graph state machine can be built.
      *
-     * @param vertex The vertex to start at. Must be a vertex in the graph.
+     * @param vertex The addVertex to start at. Must be a addVertex in the graph.
      */
     fun startAtVertex(vertex: V) {
         graphStateMachineBuilder.startVertex = vertex
+    }
+
+
+    /**
+     * *In summary:* The default is `false`, in which case transition behaviour is not impacted and the concept of traversal bounds can be ignored.
+     * For the default of `false` reaching the end and then moving previous will simply transition to the previous addVertex.
+     * If set to true, a previous action will move the out-of-bounds state back in bounds with an additional previous action required to go to the previous addVertex.
+     *
+     * *In more detail:* Configures the state machine's behavior when reaching out-of-bounds states [mdk.gsm.state.TraversalBounds.BeforeFirst] or [mdk.gsm.state.TraversalBounds.BeyondLast].
+     * Out-of-bounds means nowhere else to go in the graph.
+     *
+     * Being out-of-bounds for the state machine (as flagged by the [mdk.gsm.state.TraversalBounds] property of [mdk.gsm.state.TraversalState])
+     * is basically a null state, but with the benefit of knowing the last addVertex, and the direction the state was moved in.
+     *
+     * The current state of the graph state machine is always non-null, but when out of bounds,
+     * this could arguably be considered a kind of null object representation depending on how you want to interpret it via your use case.
+     *
+     * Callers can choose to ignore the [mdk.gsm.state.TraversalBounds] and forget about this mechanism, or treat being out of bounds as a distinct state.
+     *
+     * If [explicitlyTransitionIntoBounds] is `true`, the state machine will treat moving back into bounds as a standalone distinct transition, moving to a
+     * valid in-bounds state (*on the same addVertex*) upon the next dispatched action.
+     *
+     * This means the [GraphStateMachine] will stay on the same addVertex, but simply move into a traversal state which is in-bounds i.e.
+     * only the [mdk.gsm.state.TraversalBounds] property will be updated as being back into bounds: ([mdk.gsm.state.TraversalBounds.WithinBounds]).
+     *
+     * This can be useful to demarcate a process being "uninitialized" or "finished" for example, such as in the case of a completed workflow (workflows are typically a directed acyclic graph with a definitive 'ending') for instance,
+     * allowing callers to respond to the workflow being finished.
+     *
+     * @param explicitlyTransitionIntoBounds `true` to enable automatic transitions back into a valid state on the same addVertex when
+     *        out of bounds, `false` to keep the state machine at the out-of-bounds state (default).
+     */
+    fun explicitlyTransitionIntoBounds(explicitlyTransitionIntoBounds : Boolean) {
+        graphStateMachineBuilder.explicitlyTransitionIntoBounds = explicitlyTransitionIntoBounds
     }
 }
 
@@ -138,6 +172,7 @@ class GraphStateMachineBuilder<V, I, F> @PublishedApi internal constructor() whe
     var startVertex : V? = null
     var edgeTransitionFlags : F? = null
     var traversalType : EdgeTraversalType = EdgeTraversalType.RetrogradeAcyclic
+    var explicitlyTransitionIntoBounds : Boolean = false
 
     @PublishedApi
     internal fun build(): GraphStateMachine<V, I, F> {
@@ -150,14 +185,14 @@ class GraphStateMachineBuilder<V, I, F> @PublishedApi internal constructor() whe
         }
 
         check(_startVertex != null) {
-            "The start vertex must be defined."
+            "The start addVertex must be defined."
         }
 
         check(_graph.containsVertex(_startVertex)) {
             buildString {
-                append("The graph must contain the start vertex. ")
+                append("The graph must contain the start addVertex. ")
                 appendLine()
-                append("The start vertex with stepId '${_startVertex.id}' does not exist in the graph.")
+                append("The start addVertex with stepId '${_startVertex.id}' does not exist in the graph.")
             }
         }
 
@@ -166,11 +201,16 @@ class GraphStateMachineBuilder<V, I, F> @PublishedApi internal constructor() whe
         }
 
         val graphTraversal = GraphTraversalFactory.buildGraphTraversal(
-            _graph,
-            _startVertex,
-            traversalType
+            graph = _graph,
+            startVertex = _startVertex,
+            isCyclic = traversalType == EdgeTraversalType.ForwardCyclic
         )
 
-        return GraphStateMachine(graphTraversal, _edgeTransitionFlags, traversalType)
+        return GraphStateMachine(
+            graphTraversal = graphTraversal,
+            gsmConfig = GsmConfig(explicitlyTransitionIntoBounds),
+            edgeTraversalType = traversalType,
+            flags = _edgeTransitionFlags,
+        )
     }
 }

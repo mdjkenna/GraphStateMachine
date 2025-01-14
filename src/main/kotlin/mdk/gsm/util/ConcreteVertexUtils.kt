@@ -4,7 +4,7 @@ package mdk.gsm.util
 
 /**
  * An implementation of the [IStringVertex] interface included for convenience
- * @property id The [String] identifier of the vertex
+ * @property id The [String] identifier of the addVertex
  */
 data class StringVertex(
     override val id: String,
@@ -12,7 +12,7 @@ data class StringVertex(
 
 /**
  * An implementation of the [IIntVertex] interface included for convenience.
- * @property id The [Int] identifier of the vertex.
+ * @property id The [Int] identifier of the addVertex.
  */
 data class IntVertex(
     override val id: Int
@@ -20,7 +20,7 @@ data class IntVertex(
 
 /**
  * An implementation of the [ILongVertex] interface included for convenience.
- * @property id The [Long] identifier of the vertex.
+ * @property id The [Long] identifier of the addVertex.
  */
 data class LongVertex(
     override val id: Long
@@ -28,7 +28,7 @@ data class LongVertex(
 
 /**
  * An implementation of the [ICharVertex] interface included for convenience.
- * @property id The [Char] identifier of the vertex.
+ * @property id The [Char] identifier of the addVertex.
  */
 data class CharVertex(
     override val id: Char
@@ -36,7 +36,7 @@ data class CharVertex(
 
 /**
  * An implementation of the [IByteVertex] interface included for convenience.
- * @property id The [Byte] identifier of the vertex.
+ * @property id The [Byte] identifier of the addVertex.
  */
 data class ByteVertex(
     override val id: Byte
@@ -44,7 +44,7 @@ data class ByteVertex(
 
 /**
  * An implementation of the [IShortVertex] interface included for convenience.
- * @property id The [Short] identifier of the vertex.
+ * @property id The [Short] identifier of the addVertex.
  */
 data class ShortVertex(
     override val id: Short
@@ -52,7 +52,7 @@ data class ShortVertex(
 
 /**
  * An implementation of the [IFloatVertex] interface included for convenience.
- * @property id The [Float] identifier of the vertex.
+ * @property id The [Float] identifier of the addVertex.
  */
 data class FloatVertex(
     override val id: Float
@@ -60,7 +60,7 @@ data class FloatVertex(
 
 /**
  * An implementation of the [IDoubleVertex] interface included for convenience.
- * @property id The [Double] identifier of the vertex.
+ * @property id The [Double] identifier of the addVertex.
  */
 data class DoubleVertex(
     override val id: Double

@@ -7,14 +7,14 @@ package mdk.gsm.graph.traversal
  * The default option used is: [EdgeTraversalType.RetrogradeAcyclic].
  *
  * There are two situations affected by the traversal type currently:
- * - An edge is not traversed due to a transition handler returning false, but later becomes a traversal candidate while its source vertex is still active
+ * - An edge is not traversed due to a transition handler returning false, but later becomes a traversal candidate while its source addVertex is still active
  * - The graph contains cycles
  *
  * If neither of the above situations are encountered, then there is currently no difference between the traversal types.
  */
 enum class EdgeTraversalType {
     /**
-     * Looks "forwards" and "backwards" on a source vertex for potential edges to traverse.
+     * Looks "forwards" and "backwards" on a source addVertex for potential edges to traverse.
      * Each traversal attempt rechecks all non-visited edges of gray vertices for traversal.
      * This option will make an edge which was previously not a candidate for traversal be checked again for traversal.
      *
@@ -35,7 +35,7 @@ enum class EdgeTraversalType {
      * Cycles are not ignored.
      *
      * Similar to [EdgeTraversalType.ForwardAcyclic], except this option will not ignore cycles but instead transition through them.
-     * Arriving at a gray vertex will reset the traversal to the first edge of that vertex.
+     * Arriving at a gray addVertex will reset the traversal to the first edge of that addVertex.
      * This means when cycles are encountered, they can potentially go on forever until they are prevented in a transition handler.
      * This can be desirable behaviour for certain situations, but should be used with caution.
      */

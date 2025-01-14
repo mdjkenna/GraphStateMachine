@@ -31,10 +31,10 @@ class GraphBuilderScope<V, I, F> internal constructor(
 ) where V : IVertex<I>, F : IEdgeTransitionFlags
 {
     /**
-     * Add a vertex to the graph
+     * Add a addVertex to the graph
      *
-     * @param vertex The vertex to add
-     * @param scopeConsumer The scope consumer to build the vertex
+     * @param addVertex The addVertex to add
+     * @param scopeConsumer The scope consumer to build the addVertex
      */
     fun addVertex(
         vertex: V,
@@ -46,6 +46,16 @@ class GraphBuilderScope<V, I, F> internal constructor(
 
         workflowGraphGraphBuilder.add(vertexContainerBuilder.build())
     }
+
+    /**
+     * Shorthand for [addVertex]
+     *
+     * @see addVertex
+     */
+    fun v(
+        vertex: V,
+        scopeConsumer: VertexBuilderScope<V, I, F>.() -> Unit = {}
+    ) = addVertex(vertex, scopeConsumer)
 }
 
 internal class GraphBuilder<V, I, F> where V : IVertex<I>, F : IEdgeTransitionFlags {
@@ -54,7 +64,7 @@ internal class GraphBuilder<V, I, F> where V : IVertex<I>, F : IEdgeTransitionFl
     fun add(vertexContainer: VertexContainer<V, I, F>) {
         val existingValue = map.put(vertexContainer.vertex.id, vertexContainer)
         check(existingValue == null) {
-            "A vertex with the id ${vertexContainer.vertex.id} already exists in the graph."
+            "A addVertex with the id ${vertexContainer.vertex.id} already exists in the graph."
         }
     }
 
@@ -68,7 +78,7 @@ internal class GraphBuilder<V, I, F> where V : IVertex<I>, F : IEdgeTransitionFl
         map.forEach { _, vertexContainer ->
             vertexContainer.adjacentOrdered.forEach { edge ->
                 checkNotNull(map[edge.to]) {
-                    "The vertex pointed to by the edge from ${vertexContainer.vertex.id} to ${edge.to} is missing"
+                    "The addVertex pointed to by the edge from ${vertexContainer.vertex.id} to ${edge.to} is missing"
                 }
             }
         }

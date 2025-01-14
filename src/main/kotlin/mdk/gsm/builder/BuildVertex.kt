@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package mdk.gsm.builder
 
 import mdk.gsm.graph.Edge
@@ -11,17 +13,25 @@ class VertexBuilderScope<V, I, F> internal constructor(
 ) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
     /**
-     * Adds an outgoing edge to the vertex.
-     * @param autoOrder Automatically set the order of the edge to the current number of edges.
-     * @param scopeConsumer Used to configure the edge.
+     * Adds an outgoing edge from the current addVertex to a destination addVertex. The edge is configured
+     * using the provided [edgeBuilderScope] lambda.
+     *
+     * If [autoOrder] is ``true`` (default), the [Edge.order] value is automatically assigned based on the existing
+     * outgoing edge count. If false then it must be set manually.
+     *
+     * @param V The type of the vertices (states). Must implement [IVertex].
+     * @param I The type of the addVertex identifiers.
+     * @param F The type of the edge transition flags. Must implement [IEdgeTransitionFlags].
+     * @param autoOrder Automatically assign the edge's order. Defaults to `true`.
+     * @param edgeBuilderScope Lambda receiving an [EdgeBuilderScope] to configure the edge.
      */
-    fun addOutgoingEdge(
+    fun addEdge(
         autoOrder : Boolean = true,
-        scopeConsumer : EdgeBuilderScope<V, I, F>.() -> Unit
+        edgeBuilderScope : EdgeBuilderScope<V, I, F>.() -> Unit
     ) {
         val edgeBuilder = EdgeBuilder<V, I, F>(vertexContainerBuilder.stepInstance)
 
-        scopeConsumer(EdgeBuilderScope(edgeBuilder))
+        edgeBuilderScope(EdgeBuilderScope(edgeBuilder))
         if (autoOrder) {
             edgeBuilder.order = vertexContainerBuilder.numberOfEdges
         }
@@ -30,6 +40,16 @@ class VertexBuilderScope<V, I, F> internal constructor(
             edgeBuilder.build()
         )
     }
+
+    /**
+     * Shorthand for [addEdge]
+     *
+     * @see addEdge
+     */
+    fun e(
+        autoOrder: Boolean = true,
+        edgeBuilderScope: EdgeBuilderScope<V, I, F>.() -> Unit
+    ) = addEdge(autoOrder, edgeBuilderScope)
 }
 
 internal class VertexBuilder<V, I, F>(

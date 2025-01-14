@@ -10,7 +10,7 @@ internal class ForwardGraphTraversal<V, I, F>(
     val skipCycles : Boolean = true
 ) : GraphTraversal<V, I, F>(startVertex, graph) where V : IVertex<I>, F : IEdgeTransitionFlags {
 
-    override fun next(flags: F): V? {
+    override fun moveNext(flags: F): V? {
 
         visited[pathHead.vertex.id] = VtxState.GRAY_INITIAL
 
@@ -37,7 +37,7 @@ internal class ForwardGraphTraversal<V, I, F>(
     private fun V.nextVertexOrNull(
         flags : F
     ): V? {
-        val sortedEdges = graph.getOutgoingEdgesSorted(this) ?: emptyList()
+        val sortedEdges = graph.getOutgoingEdgesSorted(this).orEmpty()
         val vtxState = visited.computeIfAbsent(this.id) {
             VtxState.GRAY_INITIAL
         }

@@ -7,6 +7,6 @@ internal class PathNode<N>(
     val vertex: N
 ) where N : IVertex<*> {
     override fun toString(): String {
-        return "PathNode(vertex=${vertex.id}, left=${left?.vertex?.id})"
+        return "PathNode(addVertex=${vertex.id}, left=${left?.vertex?.id})"
     }
 }

@@ -26,8 +26,3 @@ data class TraversalState<out V, I>(
     val isNotBeyondLast : Boolean get() = !isBeyondLast
 }
 
-enum class TraversalBounds {
-    WithinBounds,
-    BeforeFirst,
-    BeyondLast
-}

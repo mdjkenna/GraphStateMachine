@@ -1,12 +1,24 @@
 package mdk.test
 
 import mdk.gsm.builder.buildGraphStateMachineWithTransitionFlags
+import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.traversal.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachine
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.IEdgeTransitionFlags
 import mdk.gsm.util.StringVertex
+import mdk.test.utils.AssertionUtils
+import mdk.test.utils.TestBuilderUtils
+import mdk.test.utils.TestBuilderUtils.v1
+import mdk.test.utils.TestBuilderUtils.v2
+import mdk.test.utils.TestBuilderUtils.v3
+import mdk.test.utils.TestBuilderUtils.v4
+import mdk.test.utils.TestBuilderUtils.v5
+import mdk.test.utils.TestBuilderUtils.v6
+import mdk.test.utils.TestBuilderUtils.v7
+import mdk.test.utils.TestBuilderUtils.v8
+import mdk.test.utils.TestEdgeTransitionFlags
 import org.junit.Assert
+import org.junit.Before
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import strikt.api.expectThat
@@ -18,12 +30,19 @@ class TestGraphBidirectionalTraversal (
     private val parameters: Parameters,
 ) {
 
-    val graphStateMachine : GraphStateMachine<StringVertex, String, IEdgeTransitionFlags.None>
+    val graphStateMachine : GraphStateMachine<IVertex<String>, String, TestEdgeTransitionFlags>
         get() = parameters.graphStateMachine
 
+    @Before
+    fun before() {
+        graphStateMachine.dispatch(GraphStateMachineAction.Reset)
+    }
+
     @Test
-    fun `moving forwards then backwards should produce paths that mirror one another when graph is acyclic and without conditions`() {
-        val forwardUpdated = ArrayList<StringVertex>()
+    fun `staggered actions in both directions supported and produce equivalent paths`() {
+        val forwardUpdated = ArrayList<IVertex<String>>()
+        val expectedForwardPath = parameters.expectedForwardPath
+        val expectedPathSize = expectedForwardPath.size
 
         do {
             forwardUpdated.add(graphStateMachine.currentState.vertex)
@@ -33,17 +52,17 @@ class TestGraphBidirectionalTraversal (
         val forwardTraced = graphStateMachine.tracePath().map {
             it.id
         }
+        Assert.assertEquals(expectedForwardPath, forwardTraced)
+        Assert.assertEquals(expectedForwardPath, forwardUpdated.map { it.id })
 
-        Assert.assertEquals(parameters.expectedForwardPath, forwardTraced)
-        Assert.assertEquals(parameters.expectedForwardPath, forwardUpdated.map { it.id })
 
-        val backwardsUpdated = ArrayList<StringVertex>()
+        val backwardsUpdated = ArrayList<IVertex<String>>()
         do {
             backwardsUpdated.add(graphStateMachine.currentState.vertex)
             graphStateMachine.dispatch(GraphStateMachineAction.Previous)
         } while (graphStateMachine.currentState.isWithinBounds)
 
-        Assert.assertEquals(parameters.expectedForwardPath.reversed(), backwardsUpdated.map { it.id })
+        Assert.assertEquals(expectedForwardPath.reversed(), backwardsUpdated.map { it.id })
 
         forwardUpdated.clear()
 
@@ -52,86 +71,167 @@ class TestGraphBidirectionalTraversal (
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
         } while (graphStateMachine.currentState.isWithinBounds)
 
-        expectThat(forwardUpdated.map(StringVertex::id)) {
-            isEqualTo(parameters.expectedForwardPath)
+        expectThat(forwardUpdated.map(IVertex<String>::id)) {
+            isEqualTo(expectedForwardPath)
+        }
+
+        graphStateMachine.dispatch(GraphStateMachineAction.Reset)
+        graphStateMachine.dispatch(GraphStateMachineAction.Reset)
+
+        val lastIndex = expectedPathSize.dec()
+        for (i in 0 until expectedPathSize.dec()) {
+            val next1Index = if (i < lastIndex) {
+                i + 1
+            } else {
+                i
+            }
+
+            val next2Index = if (i < lastIndex - 1) {
+                next1Index + 1
+            } else {
+                next1Index
+            }
+
+            val prevIndex = if (i < lastIndex - 1) {
+                next1Index
+            } else {
+                i
+            }
+
+            val messageOnFail = ": In the scenario: i : $i, size: ${expectedPathSize}, next 1 index : $next1Index, next 2 index : $next2Index , prev index : $prevIndex"
+            AssertionUtils.expectPath(
+                expectedForwardPath.slice(0..i),
+                graphStateMachine,
+                messageOnFail
+            )
+
+            graphStateMachine.dispatch(GraphStateMachineAction.Next)
+            AssertionUtils.expectPath(
+                expectedForwardPath.slice(0..next1Index),
+                graphStateMachine,
+                messageOnFail
+            )
+
+            graphStateMachine.dispatch(GraphStateMachineAction.Next)
+            AssertionUtils.expectPath(
+                expectedForwardPath.slice(0..next2Index),
+                graphStateMachine,
+                messageOnFail
+            )
+
+            graphStateMachine.dispatch(GraphStateMachineAction.Previous)
+            AssertionUtils.expectPath(
+                expectedForwardPath.slice(0..prevIndex),
+                graphStateMachine,
+                messageOnFail
+            )
+        }
+
+        graphStateMachine.dispatch(GraphStateMachineAction.Next)
+        AssertionUtils.expectPath(
+            expectedForwardPath,
+            graphStateMachine,
+        )
+
+        for (i in expectedPathSize.dec() downTo 1) {
+            val prev1Index =  if (i > 1) {
+                i - 1
+            } else {
+                0
+            }
+
+            val prev2Index = if (i >= 2) {
+                prev1Index - 1
+            } else {
+                0
+            }
+
+            val nextIndex = if (i > 1) {
+                prev1Index
+            } else {
+                i
+            }
+
+            val messageOnFail = ": In the scenario: i : $i, size: ${expectedPathSize}, previous 1 index : $prev1Index, previous 2 index : $prev2Index , next index : $nextIndex"
+
+            AssertionUtils.expectPath(
+                expectedForwardPath.slice(0..i),
+                graphStateMachine,
+                messageOnFail
+            )
+
+            graphStateMachine.dispatch(GraphStateMachineAction.Previous)
+            AssertionUtils.expectPath(
+                expectedForwardPath.slice(0..prev1Index),
+                graphStateMachine,
+                messageOnFail
+            )
+
+            graphStateMachine.dispatch(GraphStateMachineAction.Previous)
+            if (i > 1) {
+                AssertionUtils.expectPath(
+                    expectedForwardPath.slice(0..prev2Index),
+                    graphStateMachine,
+                    messageOnFail
+                )
+            }
+
+            graphStateMachine.dispatch(GraphStateMachineAction.Next)
+            AssertionUtils.expectPath(
+                expectedForwardPath.slice(0..nextIndex),
+                graphStateMachine,
+                messageOnFail
+            )
         }
     }
 
     data class Parameters(
-        val graphStateMachine : GraphStateMachine<StringVertex, String, IEdgeTransitionFlags.None>,
-        val expectedForwardPath: List<String>
-    )
+        val title : String,
+        val graphStateMachine : GraphStateMachine<IVertex<String>, String, TestEdgeTransitionFlags>,
+        val expectedForwardPath: List<String>,
+    ) {
+        override fun toString(): String {
+            return title
+        }
+    }
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters
+        @Parameterized.Parameters(name = "{0}")
         fun data(): Collection<Array<Any>> {
             return listOf(
-                arrayOf(parameters1(EdgeTraversalType.RetrogradeAcyclic)),
-                arrayOf(parameters1(EdgeTraversalType.ForwardAcyclic)),
-                arrayOf(parameters1(EdgeTraversalType.ForwardCyclic)),
-                arrayOf(parameters2(EdgeTraversalType.RetrogradeAcyclic)),
-                arrayOf(parameters2(EdgeTraversalType.ForwardAcyclic)),
-                arrayOf(parameters2(EdgeTraversalType.ForwardCyclic)),
+                arrayOf(
+                    parameters1(title = "11 Vertex DAG Acyclic", EdgeTraversalType.RetrogradeAcyclic)
+                ),
+                arrayOf(
+                    parameters1(title = "11 Vertex DAG Cyclic", EdgeTraversalType.ForwardCyclic)
+                ),
+                arrayOf(
+                    parameters2(title = "8 Vertex DAG Forward Acyclic", EdgeTraversalType.RetrogradeAcyclic)
+                ),
+                arrayOf(
+                    parameters2(title = "8 Vertex DAG Forward Cyclic", EdgeTraversalType.ForwardCyclic)
+                ),
             )
         }
 
-        private fun parameters2(edgeTransitionType: EdgeTraversalType) : Parameters {
-            val step1 = StringVertex("1")
-            val step2a = StringVertex("2A")
-            val step2b = StringVertex("2B")
-            val step3 = StringVertex("3")
-            val step3a = StringVertex("3A")
-            val step3b = StringVertex("3B")
-            val step4 = StringVertex("4")
-            val step5 = StringVertex("5")
-
-            val graph = buildGraphStateMachineWithTransitionFlags<StringVertex, String, IEdgeTransitionFlags.None> {
-                setTraversalType(edgeTransitionType)
-
-                buildGraph(step1) {
-
-                    addVertex(step1) {
-                        addOutgoingEdge { setTo("2A") }
-                        addOutgoingEdge { setTo("2B") }
-                    }
-
-                    addVertex(step2a) {
-                        addOutgoingEdge { setTo("3") }
-                    }
-                    addVertex(step2b) {
-                        addOutgoingEdge { setTo("3A") }
-                        addOutgoingEdge { setTo("3B") }
-                    }
-                    addVertex(step3) {
-                        addOutgoingEdge { setTo("5") }
-                    }
-                    addVertex(step3a) {
-                        addOutgoingEdge { setTo("4") }
-                    }
-                    addVertex(step3b) {
-                        addOutgoingEdge { setTo("4") }
-                    }
-                    addVertex(step4) {
-                        addOutgoingEdge { setTo("5") }
-                    }
-                    addVertex(step5) {}
-                }
-            }
-
+        private fun parameters2(title: String, edgeTraversalType: EdgeTraversalType) : Parameters {
+            val graph = TestBuilderUtils.build8VertexGraphStateMachine(TestEdgeTransitionFlags(), edgeTraversalType)
             return Parameters(
+                title,
                 graph,
-                listOf(step1, step2a, step3, step5, step2b, step3a, step4, step3b).map(
-                    StringVertex::id
+                listOf(v1, v2, v4, v8, v3, v5, v7, v6).map(
+                    IVertex<String>::id
                 )
             )
-
         }
 
-        private fun parameters1(edgeTraversalType: EdgeTraversalType): Parameters {
-            val graphStateMachine = buildGraphStateMachineWithTransitionFlags<StringVertex, String, IEdgeTransitionFlags.None> {
+        private fun parameters1(title: String, edgeTraversalType: EdgeTraversalType): Parameters {
+            val graphStateMachine = buildGraphStateMachineWithTransitionFlags<IVertex<String>, String, TestEdgeTransitionFlags> {
                 val step1 = StringVertex("1")
                 setTraversalType(edgeTraversalType)
+
+                setEdgeTransitionFlags(TestEdgeTransitionFlags())
 
                 buildGraph(step1) {
                     val step2a = StringVertex("2A")
@@ -147,47 +247,47 @@ class TestGraphBidirectionalTraversal (
 
 
                     addVertex(step1) {
-                        addOutgoingEdge { setTo(step2a) }
-                        addOutgoingEdge { setTo(step2b) }
+                        addEdge { setTo(step2a) }
+                        addEdge { setTo(step2b) }
                     }
 
                     addVertex(step2a) {
-                        addOutgoingEdge { setTo(step3a) }
-                        addOutgoingEdge { setTo(step3b) }
+                        addEdge { setTo(step3a) }
+                        addEdge { setTo(step3b) }
                     }
 
                     addVertex(step2b) {
-                        addOutgoingEdge { setTo(step3c) }
+                        addEdge { setTo(step3c) }
                     }
 
                     addVertex(step3a) {
-                        addOutgoingEdge { setTo(step4a) }
+                        addEdge { setTo(step4a) }
                     }
 
                     addVertex(step3b) {
-                        addOutgoingEdge { setTo(step4b) }
+                        addEdge { setTo(step4b) }
                     }
 
                     addVertex(step3c) {
-                        addOutgoingEdge { setTo(step4b) }
+                        addEdge { setTo(step4b) }
                     }
 
                     addVertex(step4a) {
-                        addOutgoingEdge { setTo(step5) }
+                        addEdge { setTo(step5) }
                     }
 
                     addVertex(step4b) {
-                        addOutgoingEdge {
+                        addEdge {
                             setTo(step6)
                         }
                     }
 
                     addVertex(step5) {
-                        addOutgoingEdge { setTo(step7) }
+                        addEdge { setTo(step7) }
                     }
 
                     addVertex(step6) {
-                        addOutgoingEdge { setTo(step7) }
+                        addEdge { setTo(step7) }
                     }
 
                     addVertex(step7) {}
@@ -195,6 +295,7 @@ class TestGraphBidirectionalTraversal (
             }
 
             return Parameters(
+                title,
                 graphStateMachine,
                 listOf("1", "2A", "3A", "4A", "5", "7", "3B", "4B", "6", "2B", "3C")
             )

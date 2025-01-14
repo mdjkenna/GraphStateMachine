@@ -18,7 +18,7 @@ class TestGraphStateMachineBuildValidation {
             buildGraphStateMachine<TestVertex, String> {
                 buildGraph(TestVertex("1")) {
                     addVertex(TestVertex("1")) {
-                        addOutgoingEdge {
+                        addEdge {
                             setTo(TestVertex("2"))
                         }
                     }
@@ -34,7 +34,7 @@ class TestGraphStateMachineBuildValidation {
             buildGraphStateMachine<TestVertex, String> {
                 buildGraph(TestVertex("1")) {
                     addVertex(TestVertex("1")) {
-                        addOutgoingEdge {
+                        addEdge {
                             setTo(TestVertex("2"))
                         }
                     }
@@ -42,7 +42,7 @@ class TestGraphStateMachineBuildValidation {
                     addVertex(TestVertex("2"))
 
                     addVertex(TestVertex("1")) {
-                        addOutgoingEdge {
+                        addEdge {
                             setTo(TestVertex("3"))
                         }
                     }
@@ -59,7 +59,7 @@ class TestGraphStateMachineBuildValidation {
             buildGraphStateMachineWithTransitionFlags<TestVertex, String, TestEdgeTransitionFlags> {
                 buildGraph(TestVertex("1")) {
                     addVertex(TestVertex("1")) {
-                        addOutgoingEdge {
+                        addEdge {
                             setTo(TestVertex("2"))
                         }
                     }
@@ -76,7 +76,7 @@ class TestGraphStateMachineBuildValidation {
             buildGraphStateMachine<TestVertex, String> {
                 buildGraph(TestVertex("1")) {
                     addVertex(TestVertex("1")) {
-                        addOutgoingEdge {
+                        addEdge {
                             setTo(TestVertex("2"))
                         }
                     }

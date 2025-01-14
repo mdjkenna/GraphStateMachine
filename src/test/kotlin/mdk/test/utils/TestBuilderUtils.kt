@@ -34,50 +34,50 @@ object TestBuilderUtils {
             buildGraph(v1) {
 
                 addVertex(v1) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v2)
-                        setTransitionHandler {
+                        setStateTransitionGate {
                             !flags.blockedGoingTo2
                         }
                     }
 
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v3)
-                        setTransitionHandler {
+                        setStateTransitionGate {
                             !flags.blockedGoingTo3
                         }
                     }
                 }
 
                 addVertex(v2) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v4)
                     }
                 }
 
                 addVertex(v3) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v5)
-                        setTransitionHandler {
+                        setStateTransitionGate {
                             !flags.blockedGoingTo5
                         }
                     }
 
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v6)
                     }
                 }
 
                 addVertex(v4) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
                 }
 
                 addVertex(v5) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v7)
-                        setTransitionHandler {
+                        setStateTransitionGate {
                             !flags.blockedGoingTo7 && (from as SubTestVertex).testField // cast for subclass access
                                     && v5.testField // alternatively capturing lambda, these are the two options
                         }
@@ -85,23 +85,23 @@ object TestBuilderUtils {
                 }
 
                 addVertex(v6) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v7)
-                        setTransitionHandler {
+                        setStateTransitionGate {
                             !flags.blockedGoingTo7
                         }
                     }
                 }
 
                 addVertex(v7) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
 
                     if (add7to3cycle) {
-                        addOutgoingEdge {
+                        addEdge {
                             setTo(v3)
-                            setTransitionHandler {
+                            setStateTransitionGate {
                                 !flags.blockedGoingTo3
                             }
                         }
@@ -124,120 +124,120 @@ object TestBuilderUtils {
             buildGraph(v1) {
 
                 addVertex(v1) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v2)
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v3)
                     }
                 }
 
                 addVertex(v2) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v4)
                     }
                 }
 
                 addVertex(v3) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v2)
-                        setTransitionHandler {
+                        setStateTransitionGate {
                             !flags.blockedFrom3To2
                         }
                     }
 
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v7)
                     }
 
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v5)
                     }
                 }
 
                 addVertex(v4) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v6)
                     }
                 }
 
                 addVertex(v5) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
                 }
 
                 addVertex(v6) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v3)
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
                 }
 
                 addVertex(v7) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
                 }
 
                 addVertex(v8) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v9)
-                        setTransitionHandler {
+                        setStateTransitionGate {
                             !flags.blockedFrom8To9
                         }
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v10)
                     }
                 }
 
                 addVertex(v9) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v11)
                     }
                 }
 
                 addVertex(v10) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v11)
                     }
                 }
 
                 addVertex(v11) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v12)
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v13)
                     }
                 }
 
                 addVertex(v12) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v14)
                     }
                 }
 
                 addVertex(v13) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v14)
                     }
                 }
 
                 addVertex(v14) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v5)
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v15)
                     }
                 }
 
                 addVertex(v15) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v2)
                     }
                 }
