@@ -94,7 +94,7 @@ class TestAcyclicGraphTraversal(
         graphStateMachine.dispatch(GraphStateMachineAction.Next)
         var expectedNextStep = when (conditionalTraversalTestParameters.edgeTraversalType) {
             EdgeTraversalType.RetrogradeAcyclic -> v2
-            else -> v6
+            else -> v2
         }
 
         expectThat(expectedNextStep.id)

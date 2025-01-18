@@ -11,9 +11,9 @@ internal object GraphTraversalFactory {
         isCyclic : Boolean
     ) : IGraphTraversal<V, I, F> where V : IVertex<I>, F : IEdgeTransitionFlags {
         return if (isCyclic) {
-            CyclicGraphTraversal(graph, startVertex)
+            CyclicDfsGraphTraversal(graph, startVertex)
         } else {
-            AcyclicTraversal(graph, startVertex)
+            AcyclicDfsTraversal(graph, startVertex)
         }
     }
 }

@@ -26,7 +26,7 @@ import strikt.assertions.isEqualTo
 import kotlin.test.Test
 
 @RunWith(Parameterized::class)
-class TestGraphBidirectionalTraversal (
+class TestAcyclicGraphBidirectionalTraversal (
     private val parameters: Parameters,
 ) {
 
@@ -75,7 +75,6 @@ class TestGraphBidirectionalTraversal (
             isEqualTo(expectedForwardPath)
         }
 
-        graphStateMachine.dispatch(GraphStateMachineAction.Reset)
         graphStateMachine.dispatch(GraphStateMachineAction.Reset)
 
         val lastIndex = expectedPathSize.dec()
@@ -230,7 +229,6 @@ class TestGraphBidirectionalTraversal (
             val graphStateMachine = buildGraphStateMachineWithTransitionFlags<IVertex<String>, String, TestEdgeTransitionFlags> {
                 val step1 = StringVertex("1")
                 setTraversalType(edgeTraversalType)
-
                 setEdgeTransitionFlags(TestEdgeTransitionFlags())
 
                 buildGraph(step1) {
