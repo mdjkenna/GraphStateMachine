@@ -1,14 +1,14 @@
 package mdk.test.utils
 
-import mdk.gsm.state.IEdgeTransitionFlags
+import mdk.gsm.state.ITraversalGuardState
 
-class TestEdgeTransitionFlags : IEdgeTransitionFlags {
+class TestTraversalGuardState : ITraversalGuardState {
     var blockedGoingTo2 = false
     var blockedGoingTo3 = false
     var blockedGoingTo7 = false
     var blockedGoingTo5 = false
 
-    fun reset() {
+    override fun onReset() {
         blockedGoingTo2 = false
         blockedGoingTo3 = false
         blockedGoingTo7 = false
@@ -16,7 +16,12 @@ class TestEdgeTransitionFlags : IEdgeTransitionFlags {
     }
 }
 
-class Test15VertexTransitionFlags : IEdgeTransitionFlags{
+class Test15VertexTransitionArgs : ITraversalGuardState{
     var blockedFrom3To2 = false
     var blockedFrom8To9 = false
+
+    override fun onReset() {
+        blockedFrom3To2 = false
+        blockedFrom8To9 = false
+    }
 }

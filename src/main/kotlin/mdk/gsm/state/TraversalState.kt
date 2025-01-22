@@ -10,10 +10,10 @@ import mdk.gsm.graph.IVertex
  * @property vertex The current step in the traversal
  * @property traversalBounds A status which gives visibility on whether the graph has reached a dead end in terms of moving next or previous
  */
-data class TraversalState<out V>(
+data class TraversalState<out V, I>(
     val vertex : V,
     val traversalBounds: TraversalBounds = TraversalBounds.WithinBounds
-) where V : IVertex {
+) where V : IVertex<I> {
 
     val isWithinBounds : Boolean get() = traversalBounds == TraversalBounds.WithinBounds
 
@@ -26,8 +26,3 @@ data class TraversalState<out V>(
     val isNotBeyondLast : Boolean get() = !isBeyondLast
 }
 
-enum class TraversalBounds {
-    WithinBounds,
-    BeforeFirst,
-    BeyondLast
-}

@@ -1,6 +1,6 @@
 package mdk.test.utils
 
-import mdk.gsm.builder.buildGraphStateMachineWithTransitionFlags
+import mdk.gsm.builder.buildGraphStateMachine
 import mdk.gsm.graph.traversal.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachine
 
@@ -23,86 +23,85 @@ object TestBuilderUtils {
     val v15 = TestVertex("15")
 
     fun build8VertexGraphStateMachine(
-        testProgressionFlags: TestEdgeTransitionFlags,
+        testProgressionFlags: TestTraversalGuardState,
         edgeTraversalType: EdgeTraversalType,
         add7to3cycle : Boolean = false,
-    ): GraphStateMachine<TestVertex, TestEdgeTransitionFlags> {
-        return buildGraphStateMachineWithTransitionFlags<TestVertex, TestEdgeTransitionFlags> {
-            setEdgeTransitionFlags(testProgressionFlags)
+    ): GraphStateMachine<TestVertex, String, TestTraversalGuardState> {
+        return buildGraphStateMachine<TestVertex, String, TestTraversalGuardState>(testProgressionFlags) {
             setTraversalType(edgeTraversalType)
 
             buildGraph(v1) {
 
                 addVertex(v1) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v2)
-                        setTransitionHandler {
-                            !flags.blockedGoingTo2
+                        setEdgeTraversalGate {
+                            !guardState.blockedGoingTo2
                         }
                     }
 
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v3)
-                        setTransitionHandler {
-                            !flags.blockedGoingTo3
+                        setEdgeTraversalGate {
+                            !guardState.blockedGoingTo3
                         }
                     }
                 }
 
                 addVertex(v2) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v4)
                     }
                 }
 
                 addVertex(v3) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v5)
-                        setTransitionHandler {
-                            !flags.blockedGoingTo5
+                        setEdgeTraversalGate {
+                            !guardState.blockedGoingTo5
                         }
                     }
 
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v6)
                     }
                 }
 
                 addVertex(v4) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
                 }
 
                 addVertex(v5) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v7)
-                        setTransitionHandler {
-                            !flags.blockedGoingTo7 && (from as SubTestVertex).testField // cast for subclass access
+                        setEdgeTraversalGate {
+                            !guardState.blockedGoingTo7 && (from as SubTestVertex).testField // cast for subclass access
                                     && v5.testField // alternatively capturing lambda, these are the two options
                         }
                     }
                 }
 
                 addVertex(v6) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v7)
-                        setTransitionHandler {
-                            !flags.blockedGoingTo7
+                        setEdgeTraversalGate {
+                            !guardState.blockedGoingTo7
                         }
                     }
                 }
 
                 addVertex(v7) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
 
                     if (add7to3cycle) {
-                        addOutgoingEdge {
+                        addEdge {
                             setTo(v3)
-                            setTransitionHandler {
-                                !flags.blockedGoingTo3
+                            setEdgeTraversalGate {
+                                !guardState.blockedGoingTo3
                             }
                         }
                     }
@@ -114,130 +113,130 @@ object TestBuilderUtils {
     }
 
     fun build15VertexGraphStateMachine(
-        testProgressionFlags: Test15VertexTransitionFlags,
+        testProgressionFlags: Test15VertexTransitionArgs,
         edgeTraversalType: EdgeTraversalType
-    ): GraphStateMachine<TestVertex, Test15VertexTransitionFlags> {
-        return buildGraphStateMachineWithTransitionFlags<TestVertex, Test15VertexTransitionFlags> {
-            setEdgeTransitionFlags(testProgressionFlags)
+    ): GraphStateMachine<TestVertex, String, Test15VertexTransitionArgs> {
+        return buildGraphStateMachine<TestVertex, String, Test15VertexTransitionArgs>(testProgressionFlags) {
+            setTraversalGuardState(testProgressionFlags)
             setTraversalType(edgeTraversalType)
 
             buildGraph(v1) {
 
                 addVertex(v1) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v2)
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v3)
                     }
                 }
 
                 addVertex(v2) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v4)
                     }
                 }
 
                 addVertex(v3) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v2)
-                        setTransitionHandler {
-                            !flags.blockedFrom3To2
+                        setEdgeTraversalGate {
+                            !guardState.blockedFrom3To2
                         }
                     }
 
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v7)
                     }
 
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v5)
                     }
                 }
 
                 addVertex(v4) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v6)
                     }
                 }
 
                 addVertex(v5) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
                 }
 
                 addVertex(v6) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v3)
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
                 }
 
                 addVertex(v7) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v8)
                     }
                 }
 
                 addVertex(v8) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v9)
-                        setTransitionHandler {
-                            !flags.blockedFrom8To9
+                        setEdgeTraversalGate {
+                            !guardState.blockedFrom8To9
                         }
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v10)
                     }
                 }
 
                 addVertex(v9) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v11)
                     }
                 }
 
                 addVertex(v10) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v11)
                     }
                 }
 
                 addVertex(v11) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v12)
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v13)
                     }
                 }
 
                 addVertex(v12) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v14)
                     }
                 }
 
                 addVertex(v13) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v14)
                     }
                 }
 
                 addVertex(v14) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v5)
                     }
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v15)
                     }
                 }
 
                 addVertex(v15) {
-                    addOutgoingEdge {
+                    addEdge {
                         setTo(v2)
                     }
                 }
