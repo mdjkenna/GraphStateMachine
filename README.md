@@ -34,37 +34,22 @@ State machines find uses in areas such as:
 - Workflow automation
 - GUI state management
 - Event-driven systems
- 
-The `GraphStateMachine` represents the landscape of possible states within a state machine as a directed graph, where states are represented by vertices.
+
+The core concept of the `GraphStateMachine` is that it models states as vertices within a directed graph. 
+Enforcing valid transitions in the state machine can be done by verifying whether a path through the graph exists.
+The `GraphStateMachine` represents the landscape of possible states within a state machine as a directed graph, 
+where states are represented by vertices.
+
 Using a directed graph as the foundation of a state machine allows for:
 - Explicit enforcement of rules about valid state transitions
 - Supporting the encapsulation of state machine logic
-- Elaborate control over the possible paths of state changes with the possibility of generating advanced behaviour
 - An easy to visualise model of possible states and transitions
 
-Depending on how it is used, a `GraphStateMachine` might behave in a similar way to a finite state machine (FSM).
-Alternatively state machine could be considered to be more complex than a traditional FSM, as it can dynamically determine whether a transition is valid or not.
-This can be achieved by using transition flags (`IEdgeTransitionFlags`) which are discussed in detail in the sections below.
-Depending on usage, the term `Extended Finite State Machine` might be a better fit when looking at additional state information to make transitions.
-
-_In summary_: the `GraphStateMachine` is a state machine with possible states and transitions represented as a graph.  
-
-Below is an example of a directed acyclic graph that can be represented in the library (diagram made using GraphViz):
-
-<!--suppress CheckImageSize -->
-<img src="ExampleEightVertexDAG.png" alt="Example Image" width="300"/>
+Depending on usage, the `GraphStateMachine` may resemble a traditional finite state machine (FSM) or can act as an extended FSM by allowing transitions to be dynamically permitted or denied.
 
 ### Creating a `GraphStateMachine`
 
-A `GraphStateMachine` instance can be created by using the `buildGraphStateMachine` function. 
-This is an entrypoint into a series of Kotlin DSL functions which are used to build the graph and configure the state machine.
-The graph used by the state machine is constructed within the `buildGraph` function.
-
-Inside the `GraphBuilderScope` vertices can be added to the graph using `addVertex`. Within the vertex builder scope, 
-`addOutgoingEdge` is used to add outgoing edges to a vertex. The compiler will prevent a scoped function from being called in the wrong place.
-
-The nested hierarchy of available functions to configure a `GraphStateMachine` instance is demonstrated below, 
-in this Kotlin example of how to create a `GraphStateMachine` with the 8 vertex directed acyclic graph in the diagram above.
+Below is a simplified Kotlin example illustrating how vertices and edges might be added:
 
 ```kotlin
 fun main() {
@@ -77,7 +62,7 @@ fun main() {
     val seven = Vertex("7")
     val eight = Vertex("8")
     
-    val stateMachine = buildGraphStateMachine<Vertex> {
+    val stateMachine = buildGraphStateMachine<Vertex, String> {
         buildGraph(one) {
 
             addVertex(one) {
@@ -137,44 +122,34 @@ fun main() {
 }
 ```
 
+The below image illustrates the structure of the graph in the example:
+
+<!--suppress CheckImageSize -->
+<img src="ExampleEightVertexDAG.png" alt="Example Image" width="200"/>
+
 #### Implementations of IVertex
 
-A vertex that is added to the graph needs to implement the `IVertex` interface.
-From the perspective of graph traversal, the identifier for a vertex (the `ìd` field on `IVertex`) is the only information that is used to identify a vertex.
-The identifier has to be unique within the graph.
-Attempting to add duplicate identifiers when building the graph results in an error.
+A vertex that is added to the graph needs to implement the `IVertex<I>` interface.
+From the perspective the state machine, the identifier for a vertex (the `ìd` field on `IVertex<I>`) is the only information that is used to identify a vertex.
+The identifier has to be unique within the graph. Attempting to add duplicate identifiers when building the graph results in an error.
 
-Any valid `IVertex` implementation can be used as a graph vertex.
-There is already an implementation of `IVertex` provided in the library: `Vertex`.
-This class is just a convenient utility that can be used as a vertex immediately. 
+#### Adding edges
 
-Implementers of `IVertex` have the choice of making vertex implementations hold mutable state.
-**Note:** If using mutable vertex implementations, safety in multithreaded environments needs to be handled by the implementer.
+Edges are added by calling `addEdge` on the vertex scope within the builder. 
+Vertices can be referenced by edges before they are added to the graph.
+All vertices referenced by edges must exist in the graph eventually within the builder function, or an error occurs.
 
-#### Adding outgoing edges
+#### Traversal Gates
 
-Edges are added to the graph as directed outgoing edges _from_ a vertex.
-The vertex an edge is coming from will already be added to the graph.
-The `to` property of an edge is the identifier of the vertex that the edge is pointing to.
+Traversal gates can dynamically control edge traversal and are either open or closed.
+Traversal gates are receiver functions that are set when building an edge, 
+returning `true` for open and `false` for closed.
 
-All vertices referenced by a `to` property should have been added to the graph before it is built, or an error is thrown.
-An edge can temporarily reference a vertex that has not been added to the graph though, while the graph is being built.
-This allows for edges to be added to the graph in any order, as long as the vertex referenced by the `to` property exists within the graph before the end of the builder function is reached.
+They can dynamically reduce how many ways the graph can be traversed and consequently, 
+can dynamically reduce possible state transitions to a subset of those allowed within the graphs structure.
 
-#### Transition Flags and Handlers
+They are optional and don't need to be specified, in which case traversal is never prevented.
 
-The `GraphStateMachine` traverses the graph using Depth First Search as it transitions through states.
-The structure of the graph can be used to control possible state transitions, but additional logic can be added to the traversal process using transition flags and handlers.
-These are set when building the state machine, and can dynamically control state transitions across edges based on conditions that can change after the graph has been created (while the state machine is being used).
-
-Transition flags are made available to a transition handler which then determines whether the transition across an edge can occur or not.
-Transition flags must be an instance of `IEdgeTransitionFlags`.
-
-Below is a snippet where additional configuration is added to 
-an edge from vertex five to seven using a transition handler in the edge builder scope, which can block a state transition otherwise enabled by the edge.
-
-The `TransitionScope` inside this function call makes the flags available to the handler via the `flags` field, as well as
-the vertex the edge is coming from via the `from` field. This is shown in the example below:
 
 ```kotlin
 buildGraphStateMachineWithTransitionFlags<Vertex, TransitionFlagsImpl> {

@@ -9,7 +9,7 @@ import mdk.test.utils.TestBuilderUtils.v2
 import mdk.test.utils.TestBuilderUtils.v3
 import mdk.test.utils.TestBuilderUtils.v5
 import mdk.test.utils.TestBuilderUtils.v6
-import mdk.test.utils.TestEdgeTransitionFlags
+import mdk.test.utils.TestTraversalGuardState
 import mdk.test.utils.TestVertex
 import org.junit.Before
 import org.junit.Test
@@ -26,7 +26,7 @@ class TestAcyclicGraphTraversal(
 ) {
 
     class ConditionalTraversalTestParameters(
-        val graphStateMachine: GraphStateMachine<TestVertex, TestEdgeTransitionFlags>,
+        val graphStateMachine: GraphStateMachine<TestVertex, String, TestTraversalGuardState>,
         val edgeTraversalType: EdgeTraversalType
     ) {
         override fun toString(): String {
@@ -34,19 +34,16 @@ class TestAcyclicGraphTraversal(
         }
     }
 
-
     @Before
     fun resetParameters() {
         conditionalTraversalTestParameters.graphStateMachine.dispatch(
             GraphStateMachineAction.Reset
         )
-
-        conditionalTraversalTestParameters.graphStateMachine.flags.reset()
     }
 
     @Test
     fun `graph edges are visited conditionally as expected according to the edge traversal type`() {
-        val testProgressionFlags = conditionalTraversalTestParameters.graphStateMachine.flags
+        val testProgressionFlags = conditionalTraversalTestParameters.graphStateMachine.traversalGuardState
         val graphStateMachine = conditionalTraversalTestParameters.graphStateMachine
 
         testProgressionFlags.blockedGoingTo2 = true
@@ -79,7 +76,7 @@ class TestAcyclicGraphTraversal(
 
     @Test
     fun `different traversal types show expected differences in behaviour surrounding edge conditional evaluation`() {
-        val testProgressionFlags = conditionalTraversalTestParameters.graphStateMachine.flags
+        val testProgressionFlags = conditionalTraversalTestParameters.graphStateMachine.traversalGuardState
         val graphStateMachine = conditionalTraversalTestParameters.graphStateMachine
         testProgressionFlags.blockedGoingTo2 = true
         testProgressionFlags.blockedGoingTo7 = true
@@ -93,8 +90,8 @@ class TestAcyclicGraphTraversal(
         testProgressionFlags.blockedGoingTo2 = false
         graphStateMachine.dispatch(GraphStateMachineAction.Next)
         var expectedNextStep = when (conditionalTraversalTestParameters.edgeTraversalType) {
-            EdgeTraversalType.RetrogradeAcyclic -> v2
-            else -> v6
+            EdgeTraversalType.DFSAcyclic -> v2
+            else -> v2
         }
 
         expectThat(expectedNextStep.id)
@@ -140,7 +137,7 @@ class TestAcyclicGraphTraversal(
                         arrayOf(
                             ConditionalTraversalTestParameters(
                                 TestBuilderUtils.build8VertexGraphStateMachine(
-                                    testProgressionFlags = TestEdgeTransitionFlags(),
+                                    testProgressionFlags = TestTraversalGuardState(),
                                     edgeTraversalType = edgeTraversalType
                                 ),
                                 edgeTraversalType

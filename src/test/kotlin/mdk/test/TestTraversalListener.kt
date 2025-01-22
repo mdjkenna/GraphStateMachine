@@ -4,7 +4,7 @@ import mdk.gsm.graph.traversal.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.TraversalState
 import mdk.test.utils.TestBuilderUtils
-import mdk.test.utils.TestEdgeTransitionFlags
+import mdk.test.utils.TestTraversalGuardState
 import mdk.test.utils.TestVertex
 import org.junit.Test
 import strikt.api.expectThat
@@ -15,11 +15,11 @@ class TestGraphStateMachineStateUpdatedListener {
     @Test
     fun `the on state updated listener should receive state updates including the current state when set unless specified otherwise`() {
 
-        val updatedStates = ArrayList<TraversalState<TestVertex>>()
+        val updatedStates = ArrayList<TraversalState<TestVertex, String>>()
 
         val graphStateMachine = TestBuilderUtils.build8VertexGraphStateMachine(
-            testProgressionFlags = TestEdgeTransitionFlags(),
-            edgeTraversalType = EdgeTraversalType.ForwardCyclic,
+            testProgressionFlags = TestTraversalGuardState(),
+            edgeTraversalType = EdgeTraversalType.DFSCyclic,
         )
 
         graphStateMachine.setOnStateUpdatedListener { traversalState ->
