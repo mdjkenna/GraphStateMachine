@@ -12,8 +12,10 @@ sealed class GraphStateMachineAction {
     data object Previous : GraphStateMachineAction()
 
     /**
-     * Represents the action of clearing all existing state and starting from the beginning, as if newly created.
-     * Note edge transition flags are not automatically reset, the caller must do this if necessary.
+     * Represents the action of clearing all existing state and starting from the beginning,
+     * as if newly created. Allows for reuse.
+     *
+     * @see [ITraversalGuardState.onReset]
      */
     data object Reset : GraphStateMachineAction()
 }

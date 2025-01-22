@@ -1,9 +1,9 @@
 package mdk.gsm.graph
 
-import mdk.gsm.state.IEdgeTransitionFlags
+import mdk.gsm.state.ITraversalGuardState
 
 @PublishedApi
-internal class VertexContainer<V, F> internal constructor(
+internal class VertexContainer<V, I, F> internal constructor(
     val vertex: V,
-    val adjacentOrdered: List<Edge<V, F>>
-) where V : IVertex, F : IEdgeTransitionFlags
+    val adjacentOrdered: List<Edge<V, I, F>>
+) where V : IVertex<I>, F : ITraversalGuardState

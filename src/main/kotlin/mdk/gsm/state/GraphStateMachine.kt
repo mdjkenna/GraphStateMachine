@@ -4,36 +4,32 @@ package mdk.gsm.state
 
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.traversal.EdgeTraversalType
-import mdk.gsm.graph.traversal.GraphTraversal
+import mdk.gsm.graph.traversal.IGraphTraversal
 
 /**
  * A class representing a graph-based state machine.
  * Possible transitions between states are modelled as relationships in a directed graph.
  *
- * The use of a directed graph allows structural limitations to be placed on which state transitions are possible using directed edges when the graph is created.
- * Transitions are also controlled via flags: [IEdgeTransitionFlags] that determine the eligibility of a transition (or edge traversal).
- *
- * Using [IEdgeTransitionFlags] the possible transitions are reduced to a subset depending on runtime conditions of the state machine.
- *
- * @property flags The edge progression flags which are passed to each edge to determine if traversal can occur.
+ * @property traversalGuardState The edge progression flags which are passed to each edge to determine if traversal can occur.
  */
-class GraphStateMachine<V, F> internal constructor(
-    private val graphTraversal: GraphTraversal<V, F>,
-    val flags: F,
+class GraphStateMachine<out V, I, F> internal constructor(
+    private val graphTraversal: IGraphTraversal<V, I, F>,
+    private val gsmConfig: GsmConfig,
+    val traversalGuardState: F,
     internal val edgeTraversalType: EdgeTraversalType
-) where V : IVertex, F : IEdgeTransitionFlags {
+) where V : IVertex<I>, F : ITraversalGuardState {
 
-    var currentState = TraversalState<V>(graphTraversal.currentStep())
-        private set
+    val currentState : TraversalState<V, I> get() = _currentState
+    private var _currentState : TraversalState<V, I> = TraversalState<V, I>(graphTraversal.currentStep())
 
-    private var onStateUpdatedListener : ((TraversalState<V>) -> Unit)? = null
+    private var onStateUpdatedListener : ((TraversalState<V, I>) -> Unit)? = null
 
     /**
      * Sets a listener for state updates as a result of a dispatched action
      */
     fun setOnStateUpdatedListener(
         readCurrent: Boolean = true,
-        listener: (TraversalState<V>) -> Unit
+        listener: (TraversalState<V, I>) -> Unit
     ) {
         onStateUpdatedListener = listener
 
@@ -68,9 +64,12 @@ class GraphStateMachine<V, F> internal constructor(
 
         when (graphStateMachineAction) {
             GraphStateMachineAction.Next -> {
-                val next = graphTraversal.next(flags)
+                updateState { current ->
+                    if (gsmConfig.explicitlyMoveIntoBounds && current.traversalBounds != TraversalBounds.WithinBounds) {
+                        current.copy(traversalBounds = TraversalBounds.WithinBounds)
+                    }
 
-                updateProgress { current ->
+                    val next = graphTraversal.moveNext(traversalGuardState)
                     if (next != null) {
                         TraversalState(next)
                     } else {
@@ -80,9 +79,9 @@ class GraphStateMachine<V, F> internal constructor(
             }
 
             GraphStateMachineAction.Previous -> {
-                val previousStep = graphTraversal.movePrevious()
 
-                updateProgress { current ->
+                updateState { current ->
+                    val previousStep = graphTraversal.movePrevious()
                     if (previousStep != null) {
                         TraversalState(previousStep)
                     } else {
@@ -92,19 +91,38 @@ class GraphStateMachine<V, F> internal constructor(
             }
 
             GraphStateMachineAction.Reset -> {
-                updateProgress {
+                updateStateUnconditionally {
+                    traversalGuardState.onReset()
                     TraversalState(graphTraversal.reset())
                 }
             }
         }
     }
 
-    private inline fun updateProgress(
-        crossinline update : (current : TraversalState<V>) -> TraversalState<V>
+    private inline fun updateStateUnconditionally(
+        crossinline update : (current : TraversalState<V, I>) -> TraversalState<V, I>
     ) {
+
         val newProgress = update(currentState)
-        currentState = newProgress
+        _currentState = newProgress
         onStateUpdatedListener?.invoke(newProgress)
+    }
+
+    private inline fun updateState(
+        crossinline update : (current : TraversalState<V, I>) -> TraversalState<V, I>
+    ) {
+        val newState = if (gsmConfig.explicitlyMoveIntoBounds && currentState.traversalBounds != TraversalBounds.WithinBounds) {
+            currentState.copy(traversalBounds = TraversalBounds.WithinBounds)
+        } else {
+            update(currentState)
+        }
+
+        _currentState = newState
+        onStateUpdatedListener?.invoke(newState)
     }
 }
 
+
+internal class GsmConfig(
+    val explicitlyMoveIntoBounds : Boolean
+)

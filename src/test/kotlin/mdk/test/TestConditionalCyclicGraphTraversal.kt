@@ -3,26 +3,26 @@ package mdk.test
 import mdk.gsm.graph.traversal.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.utils.AssertionUtils
-import mdk.test.utils.Test15VertexTransitionFlags
+import mdk.test.utils.Test15VertexTransitionArgs
 import mdk.test.utils.TestBuilderUtils
-import mdk.test.utils.TestEdgeTransitionFlags
+import mdk.test.utils.TestTraversalGuardState
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isFalse
 import strikt.assertions.isTrue
 
-class TestCyclicGraphTraversal {
+class TestConditionalCyclicGraphTraversal {
 
     @Test
     fun `graph with a cycle is traversed according to the edge traversal type as expected`() {
 
         val graphStateMachine = TestBuilderUtils.build8VertexGraphStateMachine(
-            testProgressionFlags = TestEdgeTransitionFlags(),
-            edgeTraversalType = EdgeTraversalType.ForwardCyclic,
+            testProgressionFlags = TestTraversalGuardState(),
+            edgeTraversalType = EdgeTraversalType.DFSCyclic,
             add7to3cycle = true
         )
 
-        val testProgressionFlags = graphStateMachine.flags
+        val testProgressionFlags = graphStateMachine.traversalGuardState
 
         repeat(20) {
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
@@ -68,8 +68,8 @@ class TestCyclicGraphTraversal {
     @Test
     fun `large graph with multiple cycles traversed as expected`() {
         val graphStateMachine = TestBuilderUtils.build15VertexGraphStateMachine(
-            testProgressionFlags = Test15VertexTransitionFlags(),
-            edgeTraversalType = EdgeTraversalType.ForwardCyclic,
+            testProgressionFlags = Test15VertexTransitionArgs(),
+            edgeTraversalType = EdgeTraversalType.DFSCyclic,
         )
 
         var expected = "1, 2, 4, 6, 3, 2, 4, 6, 3, 2, 4, 6, 3".split(", ")
@@ -83,7 +83,7 @@ class TestCyclicGraphTraversal {
             graphStateMachine = graphStateMachine
         )
 
-        graphStateMachine.flags.blockedFrom3To2 = true
+        graphStateMachine.traversalGuardState.blockedFrom3To2 = true
 
         repeat(14) {
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
@@ -96,7 +96,7 @@ class TestCyclicGraphTraversal {
             graphStateMachine = graphStateMachine
         )
 
-        graphStateMachine.flags.blockedFrom8To9 = true
+        graphStateMachine.traversalGuardState.blockedFrom8To9 = true
 
         repeat(2) {
             graphStateMachine.dispatch(GraphStateMachineAction.Next)
