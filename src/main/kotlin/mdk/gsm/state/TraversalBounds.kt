@@ -10,7 +10,7 @@ package mdk.gsm.state
  * in this case the [TraversalBounds] class can be used to represent when the workflow is 'completed'.
  *
  * @see [mdk.gsm.state.TraversalState]
- * @see [mdk.gsm.builder.GraphStateMachineBuilderScope.explicitlyTransitionIntoBounds]
+ * @see [mdk.gsm.builder.GraphStateMachineBuilderScope.setExplicitTransitionIntoBounds]
  */
 enum class TraversalBounds {
     /**

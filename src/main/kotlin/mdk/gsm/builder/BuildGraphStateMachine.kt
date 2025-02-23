@@ -146,12 +146,12 @@ class GraphStateMachineBuilderScope<V, I, F> @PublishedApi internal constructor(
      * Being out-of-bounds for the state machine (as flagged by the [mdk.gsm.state.TraversalBounds] property of [mdk.gsm.state.TraversalState])
      * is basically a null state, but with the benefit of knowing the last vertex, and the direction the state was moved in.
      *
-     * The current state of the graph state machine is always non-null, but when out of bounds, and [explicitlyTransitionIntoBounds] is `true`,
+     * The current state of the graph state machine is always non-null, but when out of bounds, and [setExplicitTransitionIntoBounds] is `true`,
      * this could arguably be considered a kind of null object representation depending on how you want to interpret it via your use case.
      *
      * Callers can choose to ignore the [mdk.gsm.state.TraversalBounds] and forget about this mechanism, or treat being out of bounds as a distinct state.
      *
-     * If [explicitlyTransitionIntoBounds] is `true`, the state machine will treat moving back into bounds as a standalone distinct transition, moving to a
+     * If [setExplicitTransitionIntoBounds] is `true`, the state machine will treat moving back into bounds as a standalone distinct transition, moving to a
      * valid in-bounds state (*on the same vertex*) upon the next dispatched action.
      *
      * This means the [GraphStateMachine] will stay on the same vertex, but simply move into a traversal state which is in-bounds i.e.
@@ -160,10 +160,10 @@ class GraphStateMachineBuilderScope<V, I, F> @PublishedApi internal constructor(
      * This can be useful to demarcate a process being "uninitialized" or "finished" for example, such as in the case of a completed workflow (workflows are typically a directed acyclic graph with a definitive 'ending') for instance,
      * allowing callers to respond to the workflow being finished.
      *
-     * @param explicitlyTransitionIntoBounds `true` to enable automatic transitions back into a valid state on the same vertex when
+     * @param setExplicitTransitionIntoBounds `true` to enable automatic transitions back into a valid state on the same vertex when
      *        out of bounds, `false` to keep the state machine at the out-of-bounds state (default).
      */
-    fun explicitlyTransitionIntoBounds(explicitlyTransitionIntoBounds : Boolean) {
+    fun setExplicitTransitionIntoBounds(explicitlyTransitionIntoBounds : Boolean) {
         graphStateMachineBuilder.explicitlyTransitionIntoBounds = explicitlyTransitionIntoBounds
     }
 }
