@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 object Props {
-    const val VERSION = "0.3.8"
+    const val VERSION = "0.3.11"
 }
 
 plugins {
