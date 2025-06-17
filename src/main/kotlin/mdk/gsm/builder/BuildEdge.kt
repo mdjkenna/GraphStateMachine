@@ -4,16 +4,16 @@ package mdk.gsm.builder
 
 import mdk.gsm.graph.Edge
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.ITraversalGuardState
-import mdk.gsm.state.TraversalGuard
+import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.TransitionGuard
 
 @GsmBuilderScope
-class EdgeBuilderScope<V, I, F> internal constructor(
-    private val edgeBuilder: EdgeBuilder<V, I, F>
-) where V : IVertex<I>, F : ITraversalGuardState {
+class EdgeBuilderScope<V, I, F, A> internal constructor(
+    private val edgeBuilder: EdgeBuilder<V, I, F, A>
+) where V : IVertex<I>, F : ITransitionGuardState {
 
     /**
-     * Sets the order in which the edge is checked for traversal.
+     * Sets the order in which the edge is traversed based on being sorted ascending.
      * @param order The order of the edge.
      */
     fun setOrder(order: Int) {
@@ -37,43 +37,34 @@ class EdgeBuilderScope<V, I, F> internal constructor(
     }
 
     /**
-     * Sets the [mdk.gsm.state.TraversalGuard] for this edge, controlling
-     * whether the state machine can traverse this edge at runtime.
+     * Sets the [TransitionGuard] for this edge.
+     * @see TransitionGuard
      *
-     * The gate returns true for open and false for closed.
-     *
-     * Note the same gate can be evaluated multiple times, including as part of DFS backtracking after reaching a dead end.
-     *
-     * The [mdk.gsm.state.TraversalGuard] is a lambda with receiver, receiving a [mdk.gsm.state.TraversalGuardScope] as its receiver.
-     * It should return `true` if the transition is allowed, and `false` otherwise.  This allows you to
-     * implement complex conditional state transition logic.
-     *
-     * @param traversalGuard The function controlling transition across this edge. Receives a
-     *   [mdk.gsm.state.TraversalGuardScope] and returns `true` to allow the transition, `false` to prevent it.
+     * @param transitionGuard The function controlling transition across this edge. Receives a
+     *   [mdk.gsm.state.TransitionGuardScope] and returns `true` to allow the transition, `false` to prevent it.
      */
-    fun setEdgeTraversalGate(traversalGuard : TraversalGuard<V, I, F>) {
-        edgeBuilder.traversalGuard = traversalGuard
+    fun setEdgeTransitionGuard(transitionGuard : TransitionGuard<V, I, F, A>) {
+        edgeBuilder.transitionGuard = transitionGuard
     }
 }
 
-internal class EdgeBuilder<V, I, F>(
+internal class EdgeBuilder<V, I, F, A>(
     private val from : V
-) where V : IVertex<I>, F : ITraversalGuardState {
+) where V : IVertex<I>, F : ITransitionGuardState {
     var order = 0
     var to : I? = null
-    var traversalGuard : TraversalGuard<V, I, F>? = null
+    var transitionGuard : TransitionGuard<V, I, F, A>? = null
 
-    fun build() : Edge<V, I, F> {
+    fun build() : Edge<V, I, F, A> {
 
         val localTo = to
         check(localTo != null)
 
-        return Edge<V, I, F>(
+        return Edge<V, I, F, A>(
             order = order,
             from = from,
             to = localTo,
-            traversalGuard = traversalGuard
+            transitionGuard = transitionGuard
         )
     }
 }
-

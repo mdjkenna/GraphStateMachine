@@ -2,19 +2,22 @@ package mdk.gsm.state
 
 /**
  * Graph traversal can have dead ends depending on the structure of the graph. The [TraversalBounds] class represents the different scenarios
- * that can occur in a [GraphStateMachine] regarding attempts to traverse when at a dead end,
- * from either a [GraphStateMachineAction.Previous] action when at the first vertex,
- * or a [GraphStateMachineAction.Next] when there are no vertices left.
+ * that can occur, from either a [GraphStateMachineAction.Previous] action when at the first vertex,
+ * or a [GraphStateMachineAction.Next] when there are no vertices left to go to.
  *
- * A common situation where this might occur is when using a [GraphStateMachine] to represent a workflow via a directed acyclic graph with a definite ending -
- * in this case the [TraversalBounds] class can be used to represent when the workflow is 'completed'.
+ * A cyclic graph might retain a status of [TraversalBounds.WithinBounds] indefinitely.
+ * A value of this enum forms part of the published [mdk.gsm.state.traverser.TraversalState].
+ * It is particularly relevant for DAGs and workflow related use cases.
  *
- * @see [mdk.gsm.state.TraversalState]
+ * Depending on the implementer's requirements, a [mdk.gsm.state.traverser.TraversalState] with a value other than [WithinBounds] might be treated as null.
+ *
+ * @see [mdk.gsm.state.traverser.TraversalState]
  * @see [mdk.gsm.builder.GraphStateMachineBuilderScope.setExplicitTransitionIntoBounds]
  */
 enum class TraversalBounds {
     /**
-     * Has not attempted to go beyond a dead end e.g. a [GraphStateMachineAction.Next] action when there are no vertices left. The normal status.
+     * The normal / default status. Depending on the context
+     * Has not attempted to go beyond a dead end e.g., a [GraphStateMachineAction.Next] action when there are no vertices left.
      */
     WithinBounds,
 

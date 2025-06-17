@@ -6,8 +6,70 @@
 
 # GraphStateMachine
 
-GraphStateMachine is a Kotlin library for modelling state machines using directed graphs.
-It provides a declarative way to define possible states in a state machine using a domain-specific language (DSL) based builder.
+This is a Kotlin library for creating state machines that are designed by building a directed graph of states and transitions between them.
+State machine behaviour is defined by specifying possible states and transitions in a Kotlin domain-specific-language (DSL) style builder.
+
+Advantages of this approach include:
+
+- **Validation**: - The absence of an edge in the graph implicitly prevents invalid transitions
+
+- **Declarative State Modeling**: - Avoid complex procedural constructs which are difficult and time-consuming to verify 
+
+- **Visualization and Communication**: - An inherently visual graph based model simplifies understanding and communicating state machine behaviour
+
+- **Flexibility**: - There are myriad ways of using the state machines in this library with the flexible nature of this approach and available feature combinations
+
+- **Focus**: - An implementation focused on doing one thing well without third party dependencies (except for coroutines), avoiding the addition of transitive dependencies to your project
+
+Features and highlights:
+- Configurable movement through the graph model
+- Supports moving to previous states
+- Cycles and conditional transitions through the graph are fully supported
+- Effects are supported within the state model itself
+- Action arguments can be dispatched to a state machine allowing for conditional transition decisions
+- Predictable and atomic state transitions via a single-threaded actor model
+
+There are two types of state machine in the library: `Traverser` and `Walker` - each can move through the graph differently, with its own set of advantages.
+The API is explained in detail in the following sections.
+To briefly give an idea of this libraries usage - here is a simple traverser and walker:
+
+```kotlin
+val traverser = buildTraverser<Vertex, String> {
+    buildGraph(startVertex) {
+        addVertex(startVertex) {
+            addEdge {
+                setTo(middleVertex)
+            }
+        }
+
+        addVertex(middleVertex) {
+            addEdge {
+                setTo(endVertex)
+            }
+        }
+
+        addVertex(endVertex)
+    }
+}
+
+val walker = buildWalker<Vertex, String> {
+    buildGraph(startVertex) {
+        addVertex(startVertex) {
+            addEdge {
+                setTo(middleVertex)
+            }
+        }
+
+        addVertex(middleVertex) {
+            addEdge {
+                setTo(endVertex)
+            }
+        }
+
+        addVertex(endVertex)
+    }
+}
+```
 
 ## Adding the Library to Your Project
 
@@ -34,53 +96,18 @@ All versions with a major version of `0` are experimental and may include breaki
 ## Getting Started
 
 <details>
-<summary>What is this?</summary>
-
-`GraphStateMachine` represents the possible states within a state machine as a directed graph,
-where vertices are states and edges are transitions between states.
-
-Advantages include:
-
-- **Declarative State Modelling**: Define state machine behaviour using a directed graph,
-  declaratively specifying possible states and transitions.
-  The absence of an edge in the graph implicitly prevents invalid transitions.
-  This declarative approach makes correct state management more robust and easier to achieve than procedural implementations.
-
-- **Visualisation and Communication**: The graph-based model is inherently visual,
-  simplifying understanding and communicating the behaviour of stateful systems such as application UI state or custom protocols.
-
-- **Flexibility**: Define complex state machine behaviour with less time and effort. Previously prohibitively complex behaviour is now manageable.
-  The library supports state guards and cyclic paths, placing no limits on the simplicity or complexity of your state machines.
-
-- **Focus**: GraphStateMachine does one thing.
-  It defines and runs state machines using a graph model.
-  It has no third-party dependencies, avoiding the addition of transitive dependencies to your project.
-
-</details>
-
-<details>
 <summary>Defining a State Machine</summary>
 
-Here's a simple example of an 8 vertex directed acyclic graph:
+The following 8 vertex directed acyclic graph can be represented easily in the graph builder DSL:
 
 <!--suppress CheckImageSize -->
 <img src="ExampleEightVertexDAG.png" alt="Example Image" width="200"/>
 
-GraphStateMachine provides a DSL for defining the vertices and edges of the state machine graph.
+GraphStateMachine provides a DSL for defining vertices (states) and edges (transitions) of your state machine graph. 
+Vertices must implement the `IVertex<I>` interface, and edges define the allowed transitions between states.
+Edges are traversed in the order they're added unless specified otherwise with an `order` parameter.
 
-Inside the `GraphBuilderScope`, add vertices to the graph using `addVertex`.
-Within the vertex builder scope, use `addEdge` to add outgoing edges to a vertex.
-
-The key steps are:
-
-1. Define your states as instances of a class that implements `IVertex<I>`
-2. Use `buildGraphStateMachine` to create a new machine
-3. Within this scope, use `buildGraph` to define the graph structure
-4. Add each state as a vertex with `addVertex`
-5. For each vertex, add its allowed transitions as outgoing edges with `addEdge` in the order they should be traversed
-
-This structure allows you to declaratively specify all possible states and transitions of your state machine.
-The 8 vertex DAG above is used in a state machine in the following example:
+The following example creates a `Traverser` using the 8 vertex DAG in the image above using the graph builder DSL:
 
 ```kotlin
 fun main() {
@@ -92,16 +119,16 @@ fun main() {
     val six = Vertex("6")
     val seven = Vertex("7")
     val eight = Vertex("8")
-    
-    val stateMachine = buildGraphStateMachine<Vertex, String> {
+
+    val traverser = buildTraverser<Vertex, String> {
         buildGraph(one) {
 
             addVertex(one) {
-                addEdge {
+                addEdge { // edges are traversed in order of appearance unless specified otherwise
                     setTo(two)
                 }
 
-                addEdge { // Edge traversal order defaults to order of appearance. It can also be set as a parameter.
+                addEdge {
                     setTo(three)
                 }
             }
@@ -145,13 +172,16 @@ fun main() {
                     setTo(eight)
                 }
             }
-            
+
             addVertex(eight)
         }
     }
-
 }
 ```
+
+In this example, edges are traversed using DFS, with neighbouring edges explored in the order they are added to a vertex. 
+For vertex "one", the edge to "two" will be tried first, followed by the edge to "three". 
+You can also explicitly set the traversal order using the `order` parameter in `addEdge`.
 
 #### Implementations of IVertex
 
@@ -167,7 +197,6 @@ You can also use custom vertex implementations with user-defined types for `I`.
 
 Add edges to the graph as directed outgoing edges _from_ a vertex.
 Once the graph is built, edges have a fixed traversal order to ensure predictable and consistent edge visitation.
-If needed, specify an order parameter, ensuring it is unique per edge to avoid non-deterministic sorting.
 
 The vertex an edge is coming from will already be added to the graph.
 The `to` property of an edge is the identifier of the vertex the edge points to.
@@ -179,114 +208,307 @@ This allows adding edges to the graph in any order, as long as the vertex refere
 </details>
 
 <details>
-<summary>Using the State Machine</summary>
+<summary>Walkers and Traversers: Use Cases</summary>
 
-Once you've defined your `GraphStateMachine`, dispatch actions to trigger state changes.
+The most efficient and practical choice between a traverser or walker depends on the use case.
+
+##### Traversers
+Traversers implement standard depth-first search (DFS) which naturally includes backtracking,
+meaning they will search back through the ancestor vertices of their current path to look for unvisited vertices.
+When a traverser reaches a vertex with no valid outgoing edges, it will backtrack to find alternative paths.
+They also support moving to previous states.
+
+You can access the history of visited states on Traversers using the `tracePath()` method:
 
 ```kotlin
-repeat(8) {
-    println("Current ID: ${stateMachine.progress.currentStep.id}")
-    stateMachine.dispatch(GraphStateMachineAction.Next)
-}
-
-/* Output - based on 8 vertex DAG defined above, starting at vertex 1, traversing one at a time using DFS:
-
-Current ID: 1
-Current ID: 2
-Current ID: 4
-Current ID: 8
-Current ID: 3
-Current ID: 5
-Current ID: 7
-Current ID: 6
-
-*/
+val path = traverser.tracePath()
 ```
 
-Dispatching a `Next` action causes the state machine to transition to the next state according to the graph structure and traversal type, using depth-first search.
+This returns a list of vertices representing the traversal path, ordered from start to current.
 
-The `Previous` action unconditionally transitions the state machine to the previous state.
+###### Considerations if using a traverser
+
+Traversers retain breadcrumbs to support their backtracking and bidirectional abilities.
+As a result their memory usage is not constant but slowly increases the further they traverse.
+This is only significant in specific scenarios.   
+Note that moving to previous vertices does the opposite - removing breadcrumbs.
+If traversing constantly in a long-running loop for example this could become a consideration
+
+###### Use cases for Traversers
+
+Traversers are naturally suited to scenarios where DFS traversal through a state model is desired i.e. backtracking.
+For example: An application wizard or workflow, navigation through screens, a finite custom protocol for handling data validation.
+The `tracePath()` method mentioned above is particularly useful for processing wizard or workflow results.
+
+##### Walkers
+Walkers just transition through the first valid edge that does not block them using a transition guard.
+When a walker reaches a vertex with no valid outgoing edges it simply stops as it doesn't retain breadcrumbs for itself to support backtracking.
+Walkers are ideal for long-running or intense processes as their memory usage remains constant regardless of how far they walk.
+
+###### Use cases for Walkers
+
+Walkers can be a more straightforward choice if backtracking or moving to previous states is not required.
+Additionally, they might be a preference if you would prefer designing graphs for walkers due to the extremely straightforward nature of their movement.  
+They are suited to scenarios where many or effectively infinite transitions can occur, such as looping around a cycle indefinitely.
+For example: Indefinitely running automatic tasks on the cloud / server, forward navigation through screens using cycles for back movement, ongoing tasks
+
+| Feature       | Traversers                                       | Walkers                               |
+|---------------|--------------------------------------------------|---------------------------------------|
+| Direction     | Bidirectional (Next/Previous)                    | Forward-only (Next)                   |
+| History       | Maintains full path history for DFS backtracking | No history                            |
+| Memory Usage  | Increases with path length over time             | Constant                              |
+| Cycle Support | Optional (must be enabled)                       | Always supported                      |
+| Use Cases     | Wizards, finite workflows, undo operations       | Long-running or high throughput tasks |
+
+Note that memory usage differences between `Walkers` and `Traversers` are insignificant unless extremely high throughput or long-running use occurs.
+If this is not a factor then preference of the implementer will be based on how they want to structure their graph and if bidirectional movement through the graph is needed.
+
+#### Traversers: Resetting Edge Traversal Progression
+
+**Note this is only applicable to traversers:**
+
+A vertex becoming the current state clears all edge progression.
+Every time a vertex becomes the current state, 
+the edge visitation order that follows is identical to the first time that vertex became the current state.
+
+There are two scenarios where a vertex that has already been the current state can become the current state again:
+1. When the state machine revisits a vertex as part of forward traversal (a cycle)
+2. When arriving at a vertex from a `Previous` action (in traversers only)
+
+This behavior is why cycles in the graph are potentially infinite loops by default (which is described in more detail in a section below),
+requiring transition guards to break out of cycles when needed.
+
 </details>
 
 <details>
-<summary>Traversal Guards</summary>
+<summary>Observing State Changes</summary>
 
-In a `GraphStateMachine`, state transitions occur by traversing edges.
-Traversal guards are functions that can block state transitions by blocking traversal.
-They dynamically constrain possible state transitions to a subset of those defined by the graph, based on external conditions.
+For both walkers and traversers, the current state is published through a `StateFlow`.
+This can then be used as part of the Kotlin coroutines API, such as being collected.
+
+```kotlin
+val traverser = buildTraverser<Vertex, String> {
+    // graph implementation
+}
+
+scope.launch {
+  traverser.current.collect { traversalState ->
+        // consume state ...
+    }
+}
+```
+
+</details>
+
+<details>
+<summary>Actions and Navigation</summary>
+
+#### Basic Actions
+You induce state transitions in both traversers and walkers by dispatching actions to them.
+Traversers accept actions to move `Next`, `Previous`, or `Reset`.
+Walkers accept `Next` and `Reset` actions, but not `Previous` actions, as they can only move in one direction
+
+```kotlin
+// Asynchronous dispatch without waiting (fire and forget)
+traverser.launchDispatch(GraphStateMachineAction.Next)      // Move forward to the next state
+traverser.launchDispatch(GraphStateMachineAction.Previous)  // Move backward to the previous state
+traverser.launchDispatch(GraphStateMachineAction.Reset)     // Reset to the initial state
+
+// Suspend until the action is received (but don't wait for completion)
+scope.launch {
+    traverser.dispatch(GraphStateMachineAction.Next)
+    traverser.dispatch(GraphStateMachineAction.Previous)
+    traverser.dispatch(GraphStateMachineAction.Reset)
+}
+
+// Dispatch and await the new state
+scope.launch {
+    val result = traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+    // Now you can use the new state
+}
+```
+
+#### Actions with Arguments
+
+`Next` actions can also have arguments. 
+Any arguments that caused a particular state to be published are also included in the published state, so that arguments used can become part of your state processing if you wish. 
+They can also be used for conditional edge transitions or `onBeforeVisit` handlers (explained in the respective sections below).
+
+```kotlin
+data class NavigationArgs(val targetId: String, val options: Map<String, Any> = emptyMap())
+
+// Using launchDispatch (fire and forget)
+traverser.launchDispatch(GraphStateMachineAction.NextArgs(NavigationArgs("destination-screen")))
+
+// Or using dispatchAndAwaitResult to get the result
+scope.launch {
+    val result = traverser.dispatchAndAwaitResult(
+        GraphStateMachineAction.NextArgs(NavigationArgs("destination-screen"))
+    )
+    // Now you can use the result
+}
+```
+</details>
+
+<details>
+<summary>Transition Guards and Guard State</summary>
+
+Transition guards can block transitions across edges based on your own conditions. 
+They dynamically constrain possible state transitions to a subset of those defined by the graph.
 
 ```kotlin
 addEdge {
     setTo(exampleVertex)
-    setTraversalGuard {
-        // traversal guard scope
+    setEdgeTransitionGuard {
         !guardState.isExampleTransitionBlocked 
     }
 }
 ```
 
-Returning `false` in the traversal guard function blocks the state transition.
-Traversal guard functions have a `TraversalGuardScope` receiver, which provides data to the implementer,
-such as `guardState` shown above, which can hold arbitrary caller state.
+Returning `false` in the transition guard function blocks the state transition.
+Transition guard functions have a `TransitionGuardScope` receiver, which provides data to the implementer,
+such as `guardState` shown above. 
 
-</details>
+Transition guards can also access arguments passed with actions:
 
-<details>
-<summary>Traversal Guard State</summary>
+```kotlin
+setEdgeTransitionGuard {
+    args != null && args.targetId == "details-screen"
+}
+```
 
-The guard state object is an implementation of `ITraversalGuardState`.
-There is a single instance per graph state machine, which can be passed as a parameter into one of the builder functions.
-It can also be omitted, in which case no `ITraversalGuardState` type parameter is needed.
+This guard only allows traversal if the action arguments specify a particular target ID.
+As suspend functions, transition guards can also perform asynchronous operations:
+
+```kotlin
+setEdgeTransitionGuard {
+    val isAllowed = checkPermissions()
+    isAllowed
+}
+```
+
+#### Guard State
+
+The guard state object is a user defined implementation of `ITransitionGuardState`.
+There is a single instance per graph, which can be passed as a parameter into one of the builder functions.
+It can also be omitted, in which case no `ITransitionGuardState` type parameter is needed.
 
 ```kotlin
 class GuardState(
     var isSomeTransitionBlocked: Boolean = false
-) : ITraversalGuardState
+) : ITransitionGuardState
 
-val stateMachine = buildGraphStateMachine<StringVertex, String, GuardState>(GuardState()) {
-    // ...
+val traverser = buildTraverser<StringVertex, String, GuardState>(GuardState()) {
+    buildGraph(startVertex) {
+        addVertex(startVertex) {
+            addEdge {
+                setTo(nextVertex)
+                setEdgeTransitionGuard {
+                    !guardState.isSomeTransitionBlocked
+                }
+            }
+        }
+    }
 }
 ```
 
-The `ITraversalGuardState` instance is made available to `TraversalGuard` functions via their `TraversalGuardScope` receiver.
+The guard state is passed to the builder function and made available to all transition guards.
+The `ITransitionGuardState` instance is made available to `TransitionGuardScope` functions via their `TransitionGuardScope` receiver.
+
+This shared state can be used to:
+- Store information that affects multiple transitions
+- Implement complex transition logic that depends on the history of transitions
+- Share data between different parts of the state machine
+
+</details>
+
+<details>
+<summary>Intermediate States</summary>
+
+Intermediate states are "in-between" states that are automatically advanced through without being published as the current state.
+They are equivalent to effects, however they are part of the state model, moving them directly within the graph design itself, as a special type of state.
+This approach makes effects / operations inherently congruent with the landscape of states in your state machine architecture:
+
+- **Effects as State**: Represent effect operations as explicit states that can only occur within specific contexts
+- **Control Flow Clarity**: Make the flow of your application visible in the graph structure itself
+- **Perform Operations with Guarantees**: Clearly guarantee particular tasks will only run certain scenarios and easily visualise what those scenarios are
+
+#### How Intermediate States Work
+
+When a vertex is marked as an intermediate state:
+
+1. Just before a vertex `V1` is visited, its `onBeforeVisit` handler is executed, and the `autoAdvance` DSL function is invoked 
+2. The vertex is recorded in the traced path but never published as the current state
+3. The state machine immediately advances to the next state and `V1` was never published, making it an intermediate state
+
+Note when processing previous actions the intermediate states are also skipped.
+
+#### Creating Intermediate States
+
+To mark a vertex as an intermediate state, call `autoAdvance()` in its `onBeforeVisit` handler:
+
+```kotlin
+addVertex(loadingState) {
+    onBeforeVisit {
+        showLoading()
+        withContext(Dispatchers.IO) {
+            diskOperation()
+        }
+        hideLoading()
+
+        autoAdvance()
+    }
+
+    addEdge {
+        setTo(dataLoadedState)
+    }
+}
+```
+
+`onBeforeVisit` is called just before a vertex will be arrived at after a successful transition, but before that vertex is published as the current state.
+In this example, the loading state is marked as intermediate by calling `autoAdvance()` - advancing to the next state before publishing `loadingState`. 
+As a result `loadingState` is never perceived by observers, it will immediately advance to the data loaded state once the operation completes.
+
+Intermediate states solve common problems in a more traditional state machine oriented fashion:
+
+- **Effect Usage For Screen State**: As in the above example, perform generic side effects or other UI updates
+- **Multistep Operations and Custom Protocols**: Create chains of operations that execute in sequence without exposing intermediate steps, potentially having complex conditional paths.
+
 </details>
 
 <details>
 <summary>Using Cycles</summary>
 
-Cycles can be added to a state machine graph.
-By default, they are ignored.
-To traverse cycles, set the traversal type to: `EdgeTraversalType.DFSCyclic`
+The graph can contain any number of cycles and these are supported.
+When using a `Walker` cycles are always supported.
+When using a `Traverser` cycles are ignored by default but can be traversed by setting the traversal type to: `EdgeTraversalType.DFSCyclic` in the traverser builder. 
 
-Here's how cycles are handled:
+There are two points to consider when designing a `Traverser` on a graph with cycles:
 
-- **Edge Index Reset**: When the state machine arrives at a vertex,
-  it resets that vertex's edge index to zero.
-  Even if the state machine previously left that vertex via edge 0,
-  it will attempt to traverse edge 0 again upon revisiting the vertex.
+- **Edge Index Reset**: When the traverser arrives at a vertex, it resets that vertex's edge index to zero.
+  Even if the `Traverser` previously left that vertex via edge 0, it will attempt to traverse edge 0 again upon revisiting the vertex.
 
-- **Infinite Loops**: By design, cycles in GraphStateMachine are potentially infinite loops.
-  The library does not automatically break cycles, as this could lead to erroneously excluding states.
-  Instead, the user must coordinate cycle behaviour using transition guards as needed.
+- **Infinite Loops**: Cycles are potentially infinite loops by design, and this can be desirable depending on the use case. 
+  To avoid infinite loops through cycles, the user must coordinate cycle behavior using transition guards to break cycles as needed 
 
-Here's a simple example of using a traversal guard to limit the number of times a cycle is taken:
+Here's a simple example of using a transition guard to limit the number of times a cycle is taken:
 
 ```kotlin
 class GuardState(
     var cycleCount: Int = 0
-) : ITraversalGuardState {
+) : ITransitionGuardState {
     override fun onReset() {
         cycleCount = 0
     }
 }
 
-buildGraphStateMachine<StringVertex, String, GuardState>(GuardState()) {
+buildTraverser<StringVertex, String, GuardState>(GuardState()) {
     setTraversalType(EdgeTraversalType.DFSCyclic)
     buildGraph(stateOne) {
         addVertex(stateOne) {
             addEdge {
-                setTo(stateOne) // A cycle to itself
-                setTransitionHandler {
+                setTo(stateOne)
+                setEdgeTransitionGuard {
                     if (guardState.cycleCount < 3) {
                         guardState.cycleCount++
                         true
@@ -300,56 +522,83 @@ buildGraphStateMachine<StringVertex, String, GuardState>(GuardState()) {
 }
 ```
 
-In this example, the state machine will cycle on `stateOne` up to 3 times before the guard blocks further cycles.
+In this example, the vertex has an edge pointing back to itself, creating a cycle. 
+The transition guard allows the cycle to be taken up to 3 times before blocking further traversal, demonstrating how to control infinite loops in cyclic graphs.
+
 </details>
 
 <details>
-<summary>Some Considerations</summary>
+<summary>Concurrency</summary>
 
-**Edge Traversal Order**: 
+Both `Traversers` and `Walkers` use an actor model: A concurrency pattern where actions are processed sequentially by a single-threaded event loop that collects dispatched actions and processes them one at a time.
 
-Edges have a fixed traversal order to ensure predictable and consistent state transitions. 
-By default, edges are traversed in the order they are added to a vertex. 
-You can optionally explicitly set the traversal order using the order parameter in addEdge. 
-Edges are sorted by their order value ascending, so lower order values are visited first.
+#### Single-Threaded Execution
 
-**Edge Traversal Progression**: 
+The graph state machine operates on a coroutine scope with a single-threaded dispatcher.
+All user-defined handlers (transition guards, onBeforeVisit handlers) are suspend functions which are invoked on this same thread, providing several benefits.
+You can freely read and write to data confined within the state machine without worrying about visibility or synchronization issues.
 
-Edges have a traversal order for deterministic traversal. The state machine keeps track of the next outgoing edge to traverse. 
-The current edge (or edge index) increases until all edges are explored.
+A coroutine scope is generated as a default parameter when building a `Traverser` or `Walker`, but a user provided one can be included.
+It is the implementer's responsibility to ensure a coroutine scope they provide is single-threaded.
 
-**Resetting Edge Traversal Progression**:
+GraphStateMachine processes one action at a time in a sequential manner. When actions are dispatched to the state machine:
+The state machine completes processing the current action entirely before moving to the next one i.e. actions are atomic.
 
-A vertex becoming the current state clears all edge progression.
-Arriving at a vertex always results in identical subsequent traversal behaviour within the state machine.
-Every time a vertex becomes state, the edge visitation order that follows is the same every time, and is identical to the first time that vertex became current state.
+For example, if multiple components dispatch actions simultaneously:
 
-There are two scenarios where a vertex that has already been current state can become current state again:
-1. When the state machine revisits a vertex as part of forward traversal (a cycle)
-2. When arriving at a vertex from a `Previous` action
+```kotlin
+// These actions will be processed one after another and will not 'interleave' between yields or suspension points
+traverser.dispatch(GraphStateMachineAction.Next)
+traverser.dispatch(GraphStateMachineAction.NextArgs(someArgs))
+traverser.dispatch(GraphStateMachineAction.Previous)
+```
 
-Resetting edge progression in this way is important for flexibility and predictability. 
-It avoids baking additional edge exclusion into the library traversal mechanisms and allows for useful behaviour.
-It is also more analogous to how state transition rules are defined in traditional state machines.
-Library users can exclude edges using traversal guards if required.
+This gives us consistent state transitions, avoids race conditions, and encourages simplicity and performance.
 
-This is the reason why, as the section describing cycles above touched on, cycles are infinite loops by standard,
-requiring coordination with traversal guards to break out of this. Looping for cycles can be desirable, however ultimately the behaviour can be changed by the caller.
+#### StateFlow for State Updates
 
-Additional configuration options surrounding this topic will be made available in the future.
+The current state is published through a `StateFlow`
 
-**Concurrency:**
+```kotlin
+scope.launch {
+  traverser.current.collect { traversalState ->
+        updateUI(traversalState.vertex)
+    }
+}
+```
 
-Actions are dispatched to the state machine synchronously.
-There are no thread synchronisation or general concurrency handling mechanisms build into the state machine.
-If they are needed the API facilitates using them without imposing any in particular.
+#### GraphStateMachineScopeFactory
 
-There is only one rule with concurrency: All actions should be dispatched within the same thread.
+The `GraphStateMachineScopeFactory` provides a factory method to create a new `CoroutineScope` with the appropriate single-threaded dispatcher:
 
-The most idiomatic way of using a `GraphStateMachine` in concurrent environments would be something that emulates an actor or single threaded 'mailbox', such as a `Flow` of graph state machine actions with a single threaded flow collector,
-but a variety of approaches are possible. There will be support added for coroutines in the future.
+```kotlin
+val scope = GraphStateMachineScopeFactory.newScope()
+```
 
-The state machine also has a callback that can be set for state updates, to publish state updates in a thread safe manner, 
-such as to some variety of volatile state holder, if needed.
+Each `Traverser` or `Walker` instance must have its own separate scope, 
+but the underlying dispatcher can be shared across multiple instances, allowing them to operate on the same thread if needed, such as an application main thread. 
+
+The factory provides a convenient default configuration with a single-threaded dispatcher. 
+Note all the default scopes created using this factory share the same underlying single-threaded dispatcher.
+
+</details>
+
+<details>
+<summary>Destructuring</summary>
+
+Both traversers and walkers support Kotlin's destructuring syntax, 
+allowing you to separate the state reading and action dispatching capabilities.
+
+```kotlin
+// Destructuring a traverser
+val (traverserState, traverserDispatcher) = traverser
+
+// Destructuring a walker
+val (walkerState, walkerDispatcher) = walker
+```
+
+The above enables controlled access and can be conducive to separation of concerns:
+- `TraverserState`/`WalkerState` provides read-only access to the current state via `current` StateFlow
+- `TraverserDispatcher`/`WalkerDispatcher` provides methods to dispatch actions that modify state
 
 </details>
