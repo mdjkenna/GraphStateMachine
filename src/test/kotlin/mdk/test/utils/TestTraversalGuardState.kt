@@ -1,23 +1,12 @@
 package mdk.test.utils
 
-import mdk.gsm.state.ITraversalGuardState
+import mdk.gsm.state.ITransitionGuardState
 
-class TestTraversalGuardState : ITraversalGuardState {
-    var blockedGoingTo2 = false
-    var blockedGoingTo3 = false
-    var blockedGoingTo7 = false
-    var blockedGoingTo5 = false
-
-    override fun onReset() {
-        blockedGoingTo2 = false
-        blockedGoingTo3 = false
-        blockedGoingTo7 = false
-        blockedGoingTo5 = false
-    }
-}
-
-class Test15VertexTransitionArgs : ITraversalGuardState{
+class Test15VertexTransitionArgs : ITransitionGuardState {
+    @Volatile
     var blockedFrom3To2 = false
+
+    @Volatile
     var blockedFrom8To9 = false
 
     override fun onReset() {

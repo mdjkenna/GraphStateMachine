@@ -5,20 +5,19 @@ package mdk.gsm.builder
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.VertexContainer
-import mdk.gsm.state.ITraversalGuardState
+import mdk.gsm.state.ITransitionGuardState
 
 @DslMarker
 internal annotation class GsmBuilderScope
 
 /**
- * Build a workflow graph
- * Each step added to the workflow must have a unique step id
+ * Build a graph only
  */
 @GsmBuilderScope
-fun <V, I, F> buildGraphOnly(
-    scopeConsumer : GraphBuilderScope<V, I, F>.() -> Unit
-) : Graph<V, I, F> where V : IVertex<I>, F : ITraversalGuardState {
-    val graphBuilder = GraphBuilder<V, I, F>()
+fun <V, I, F, A> buildGraphOnly(
+    scopeConsumer : GraphBuilderScope<V, I, F, A>.() -> Unit
+) : Graph<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+    val graphBuilder = GraphBuilder<V, I, F, A>()
     val graphBuilderScope = GraphBuilderScope(graphBuilder)
     scopeConsumer(graphBuilderScope)
 
@@ -26,21 +25,21 @@ fun <V, I, F> buildGraphOnly(
 }
 
 @GsmBuilderScope
-class GraphBuilderScope<V, I, F> internal constructor(
-    private val workflowGraphGraphBuilder: GraphBuilder<V, I, F>
-) where V : IVertex<I>, F : ITraversalGuardState
+class GraphBuilderScope<V, I, F, A> internal constructor(
+    private val workflowGraphGraphBuilder: GraphBuilder<V, I, F, A>
+) where V : IVertex<I>, F : ITransitionGuardState
 {
     /**
-     * Add a vertex to the graph
+     * Add a vertex to the graph.
+     * It must have a unique ID or an error will be thrown.
      *
      * @param vertex The vertex to add
-     * @param scopeConsumer The scope consumer to build the vertex
      */
     fun addVertex(
         vertex: V,
-        scopeConsumer: VertexBuilderScope<V, I, F>.() -> Unit = {}
+        scopeConsumer: VertexBuilderScope<V, I, F, A>.() -> Unit = {}
     ) {
-        val vertexContainerBuilder = VertexBuilder<V, I, F>(vertex)
+        val vertexContainerBuilder = VertexBuilder<V, I, F, A>(vertex)
         val vertexBuilderScope = VertexBuilderScope(vertexContainerBuilder)
         scopeConsumer(vertexBuilderScope)
 
@@ -54,21 +53,21 @@ class GraphBuilderScope<V, I, F> internal constructor(
      */
     fun v(
         vertex: V,
-        scopeConsumer: VertexBuilderScope<V, I, F>.() -> Unit = {}
+        scopeConsumer: VertexBuilderScope<V, I, F, A>.() -> Unit = {}
     ) = addVertex(vertex, scopeConsumer)
 }
 
-internal class GraphBuilder<V, I, F> where V : IVertex<I>, F : ITraversalGuardState {
-    private val map = HashMap<I, VertexContainer<V, I, F>>()
+internal class GraphBuilder<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+    private val map = HashMap<I, VertexContainer<V, I, F, A>>()
 
-    fun add(vertexContainer: VertexContainer<V, I, F>) {
+    fun add(vertexContainer: VertexContainer<V, I, F, A>) {
         val existingValue = map.put(vertexContainer.vertex.id, vertexContainer)
         check(existingValue == null) {
             "A vertex with the id ${vertexContainer.vertex.id} already exists in the graph."
         }
     }
 
-    fun build() : Graph<V, I, F> {
+    fun build() : Graph<V, I, F, A> {
         assertNoDanglingEdges()
 
         return Graph(map)

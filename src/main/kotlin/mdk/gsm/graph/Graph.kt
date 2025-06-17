@@ -2,7 +2,7 @@
 
 package mdk.gsm.graph
 
-import mdk.gsm.state.ITraversalGuardState
+import mdk.gsm.state.ITransitionGuardState
 
 /**
  * Represents a graph data structure used for state machine transitions.  This graph
@@ -10,19 +10,18 @@ import mdk.gsm.state.ITraversalGuardState
  * progression. Vertices are identified by unique IDs of type `I`.
  *
  * The `Graph` class facilitates efficient lookups of vertices and their connected
- * edges. Defining all _possible_ state transitions, the [Graph] class forms the main scaffolding for the state machine's navigation logic.
+ * edges. Defining all _possible_ state transitions, the [Graph] class forms the main scaffolding for the state machine's transition logic.
  *
  * The [Graph] class is immutable if the vertex implementations are immutable.
  *
- * @see mdk.gsm.builder.buildGraphOnly
- * @see mdk.gsm.builder.GraphStateMachineBuilderScope.buildGraph
  * @param V The type of vertices stored in this graph. Must implement [IVertex].
  * @param I The type of the vertex ID. Must correspond to the type parameter of [IVertex] implemented by [V].
- * @param F The type of flags used for edge transitions. Must implement [ITraversalGuardState].
+ * @param F The type of edge traversal guard used for edge transitions. Must implement [ITransitionGuardState].
+ * @param A The type of action argument
  */
-class Graph<V, I, F> internal constructor(
-    private val map: Map<I, VertexContainer<V, I, F>>
-) where V : IVertex<I>, F : ITraversalGuardState {
+class Graph<V, I, F, A> internal constructor(
+    private val map: Map<I, VertexContainer<V, I, F, A>>
+) where V : IVertex<I>, F : ITransitionGuardState {
 
     fun containsVertex(vertex: V): Boolean {
         return map.containsKey(vertex.id)
@@ -36,8 +35,12 @@ class Graph<V, I, F> internal constructor(
         return map[id]?.vertex
     }
 
-    fun getOutgoingEdgesSorted(vertex: V): List<Edge<V, I, F>>? {
+    fun getOutgoingEdgesSorted(vertex: V): List<Edge<V, I, F, A>>? {
         return map[vertex.id]?.adjacentOrdered
+    }
+
+    internal fun getVertexContainer(id: I): VertexContainer<V, I, F, A>? {
+        return map[id]
     }
 }
 

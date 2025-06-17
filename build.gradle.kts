@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 object Props {
     const val VERSION = "0.3.11"
 }
@@ -32,7 +29,7 @@ group = "com.github.mdjkenna"
 version = Props.VERSION
 
 tasks.test {
-    useJUnit()
+   useJUnitPlatform()
 }
 
 java {
@@ -40,7 +37,7 @@ java {
     withJavadocJar()
 }
 
-kotlin {
+/*kotlin {
     jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(8))
     }
@@ -50,7 +47,7 @@ tasks.withType<KotlinCompile> {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_1_8)
     }
-}
+}*/
 
 tasks.named<Jar>("javadocJar") {
     from(tasks.named("dokkaJavadoc"))
@@ -60,11 +57,22 @@ tasks.named<Jar>("javadocJar") {
 dependencies {
     implementation(kotlin("stdlib"))
     testImplementation(kotlin("test"))
-    testImplementation("io.strikt:strikt-core:0.34.0")
-    testImplementation("junit:junit:4.13.2")
+
+    // Add JUnit 5
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
+
+    // Add Kotest
+    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
+    testImplementation("io.kotest:kotest-assertions-core:5.8.0")
+    testImplementation("io.kotest:kotest-framework-datatest:5.8.0") // For data-driven tests
+
+    // reminder - an option
+    // testImplementation("io.kotest:kotest-property:5.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }
 
-tasks.dokkaJavadoc {
+/*tasks.dokkaJavadoc {
     dokkaSourceSets {
         named("main") {
             includeNonPublic.set(false)
@@ -73,7 +81,7 @@ tasks.dokkaJavadoc {
             jdkVersion.set(8)
         }
     }
-}
+}*/
 
 publishing {
     publications {

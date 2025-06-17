@@ -1,37 +1,51 @@
 package mdk.test.utils
 
+import io.kotest.matchers.shouldBe
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.GraphStateMachine
-import mdk.gsm.state.ITraversalGuardState
-import strikt.api.expectThat
-import strikt.assertions.isEqualTo
-import strikt.assertions.map
+import mdk.gsm.state.traverser.Traverser
+import mdk.gsm.state.traverser.TraverserState
+import mdk.gsm.state.ITransitionGuardState
+import kotlin.collections.map
 
 object AssertionUtils {
-    fun <V, I, F> expectPath(
-        expectedPath : List<I>,
-        graphStateMachine: GraphStateMachine<V, I, F>,
-        messageOnFail : String = ""
-    ) where V : IVertex<I>, F : ITraversalGuardState {
-        expectThat(graphStateMachine.tracePath()).describedAs(messageOnFail)
-            .map(IVertex<I>::id)
-            .isEqualTo(expectedPath)
-
-        expectThat(graphStateMachine.currentState.vertex.id)
-            .isEqualTo(expectedPath.last())
+    fun <V, I, F, A> assertTracedPathWithCurrentState(
+        expectedPath: List<I>,
+        traverser: TraverserState<V, I, F, A>
+    ) where V : IVertex<I>, F : ITransitionGuardState {
+        traverser.tracePath().map { it.id } shouldBe expectedPath
+        traverser.current.value.vertex.id shouldBe expectedPath.last()
     }
 
-    inline fun withMessageOnFail(
-        crossinline messageOnFail : () -> String,
-        crossinline test : () -> Unit
+    fun <V : IVertex<I>, I, F : ITransitionGuardState, A> assertBounds(
+        traverser: Traverser<V, I, F, A>,
+        within: Boolean,
+        beyond: Boolean,
+        before: Boolean
     ) {
 
-        val testResult = runCatching {
-            test()
-        }
+        val currentState = traverser.current.value
+        currentState.isWithinBounds shouldBe within
+        currentState.isBeyondLast shouldBe beyond
+        currentState.isBeforeFirst shouldBe before
+        currentState.isNotBeforeFirst shouldBe !before
+        currentState.isNotBeyondLast shouldBe !beyond
+    }
 
-        if (testResult.isFailure) {
-            throw Throwable(messageOnFail(), testResult.exceptionOrNull())
-        }
+    suspend fun <V, I, F, A> assertExpectedPathGoingNextUntilEnd(
+        traverser: Traverser<V, I, F, A>,
+        expectedPath: List<I>
+    ) where V : IVertex<I>, F : ITransitionGuardState {
+        traverser.goNextAndRecordPublishedStatesUntilEnd().map { it ->
+            it.vertex.id
+        } shouldBe expectedPath
+    }
+
+    suspend fun <V, I, F, A> assertExpectedPathGoingPreviousUntilStart(
+        traverser: Traverser<V, I, F, A>,
+        expectedPath : List<I>,
+    ) where V : IVertex<I>, F : ITransitionGuardState {
+        traverser.goPreviousAndRecordPublishedStatesUntilStart().map {
+            it.vertex.id
+        } shouldBe expectedPath
     }
 }
