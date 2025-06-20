@@ -9,7 +9,6 @@ package mdk.gsm.state
  * @param A The type of arguments that can be passed with certain actions (specifically [NextArgs]).
  *          This allows for passing contextual data during state transitions.
  *
- * @see IGraphStateMachineDispatcher For dispatching these actions to the state machine
  * @see mdk.gsm.state.traverser.TraversalState For the resulting state after an action is processed
  */
 sealed class GraphStateMachineAction<out A> {

@@ -12,7 +12,6 @@ package mdk.gsm.state
  * Depending on the implementer's requirements, a [mdk.gsm.state.traverser.TraversalState] with a value other than [WithinBounds] might be treated as null.
  *
  * @see [mdk.gsm.state.traverser.TraversalState]
- * @see [mdk.gsm.builder.GraphStateMachineBuilderScope.setExplicitTransitionIntoBounds]
  */
 enum class TraversalBounds {
     /**
