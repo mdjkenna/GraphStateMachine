@@ -42,7 +42,24 @@ class Graph<V, I, F, A> internal constructor(
     internal fun getVertexContainer(id: I): VertexContainer<V, I, F, A>? {
         return map[id]
     }
+
+    /**
+     * Returns all vertices in the graph.
+     * This is an internal method used by utilities like GsmDotGenerator.
+     * 
+     * @return List of all vertices in the graph
+     */
+    internal fun getAllVertices(): List<V> {
+        return map.values.map { it.vertex }
+    }
+
+    /**
+     * Returns all edges in the graph.
+     * This is an internal method used by utilities like GsmDotGenerator.
+     * 
+     * @return List of all edges in the graph
+     */
+    internal fun getAllEdges(): List<Edge<V, I, F, A>> {
+        return map.values.flatMap { it.adjacentOrdered }
+    }
 }
-
-
-
