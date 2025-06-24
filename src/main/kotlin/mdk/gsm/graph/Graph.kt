@@ -42,7 +42,13 @@ class Graph<V, I, F, A> internal constructor(
     internal fun getVertexContainer(id: I): VertexContainer<V, I, F, A>? {
         return map[id]
     }
+
+
+    internal fun getAllVertices(): List<V> {
+        return map.values.map { it.vertex }
+    }
+
+    internal fun getAllEdges(): List<Edge<V, I, F, A>> {
+        return map.values.flatMap { it.adjacentOrdered }
+    }
 }
-
-
-

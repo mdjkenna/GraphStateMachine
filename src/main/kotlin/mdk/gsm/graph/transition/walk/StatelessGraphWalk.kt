@@ -7,22 +7,7 @@ import mdk.gsm.graph.transition.IGraphTraversal
 import mdk.gsm.graph.transition.traversal.TraversalPathNode
 import mdk.gsm.state.ITransitionGuardState
 
-/**
- * Implements a stateless walk through a graph.
- *
- * Unlike traditional traversal implementations, StatelessGraphWalk:
- * - Does not track visited nodes
- * - Does not support backtracking (movePrevious)
- * - Simply follows edges based on traversal guards
- *
- * It still supports:
- * - Arguments
- * - Traversal guards
- * - Before visit handlers
- *
- * @param graph The graph to walk through
- * @param startVertex The starting vertex for the walk
- */
+
 internal class StatelessGraphWalk<V, I, F, A>(
     private val graph: Graph<V, I, F, A>,
     private val startVertex: V,
@@ -50,7 +35,6 @@ internal class StatelessGraphWalk<V, I, F, A>(
 
             val nextVertex = graph.getVertex(edge.to) ?: continue
 
-            // Create a new path node
             val oldPathNode = if (autoAdvance && !currentPathNode.isIntermediate) {
                 currentPathNode.copy(isIntermediate = true)
             } else {
@@ -63,14 +47,12 @@ internal class StatelessGraphWalk<V, I, F, A>(
                 args = args
             )
 
-            // Update current state
             currentVertex = nextVertex
             currentPathNode = newPathNode
 
             return newPathNode
         }
 
-        // No valid edge found
         return null
     }
 
@@ -86,7 +68,6 @@ internal class StatelessGraphWalk<V, I, F, A>(
      * Always returns null as we don't support backtracking.
      */
     override fun movePrevious(): TraversalPathNode<V, A>? {
-        // Not supported in stateless walk
         return null
     }
 

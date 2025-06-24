@@ -11,15 +11,15 @@ State machine behaviour is defined by specifying possible states and transitions
 
 Advantages of this approach include:
 
-- **Validation**: - The absence of an edge in the graph implicitly prevents invalid transitions
+- **Validation**: The absence of an edge in the graph implicitly prevents invalid transitions
 
-- **Declarative State Modeling**: - Avoid complex procedural constructs which are difficult and time-consuming to verify 
+- **Declarative State Modeling**: The Kotlin DSL style builder helps you to avoid convoluted procedural constructs which can become difficult to maintain
 
-- **Visualization and Communication**: - An inherently visual graph based model simplifies understanding and communicating state machine behaviour
+- **Visualization and Communication**: Generate dot language representations your state machines to communicate and verify possible state transitions
 
-- **Flexibility**: - There are myriad ways of using the state machines in this library with the flexible nature of this approach and available feature combinations
+- **Flexibility**: Combine the available features in this library to enable myriad ways of structuring state machines and tailoring their behaviour
 
-- **Focus**: - An implementation focused on doing one thing well without third party dependencies (except for coroutines), avoiding the addition of transitive dependencies to your project
+- **Focus**: An implementation focused on doing one thing well without third party dependencies (except for coroutines), avoiding the addition of transitive dependencies to your project
 
 Features and highlights:
 - Configurable movement through the graph model
@@ -31,45 +31,6 @@ Features and highlights:
 
 There are two types of state machine in the library: `Traverser` and `Walker` - each can move through the graph differently, with its own set of advantages.
 The API is explained in detail in the following sections.
-To briefly give an idea of this libraries usage - here is a simple traverser and walker:
-
-```kotlin
-val traverser = buildTraverser<Vertex, String> {
-    buildGraph(startVertex) {
-        addVertex(startVertex) {
-            addEdge {
-                setTo(middleVertex)
-            }
-        }
-
-        addVertex(middleVertex) {
-            addEdge {
-                setTo(endVertex)
-            }
-        }
-
-        addVertex(endVertex)
-    }
-}
-
-val walker = buildWalker<Vertex, String> {
-    buildGraph(startVertex) {
-        addVertex(startVertex) {
-            addEdge {
-                setTo(middleVertex)
-            }
-        }
-
-        addVertex(middleVertex) {
-            addEdge {
-                setTo(endVertex)
-            }
-        }
-
-        addVertex(endVertex)
-    }
-}
-```
 
 ## Adding the Library to Your Project
 
@@ -101,7 +62,10 @@ All versions with a major version of `0` are experimental and may include breaki
 The following 8 vertex directed acyclic graph can be represented easily in the graph builder DSL:
 
 <!--suppress CheckImageSize -->
-<img src="ExampleEightVertexDAG.png" alt="Example Image" width="200"/>
+<img src="8VertexDAG.png" alt="Example Image" width="200"/>
+
+_The above graph image was made using a dot language representation of the 8 vertex DAG in the example below and inputting this into GraphViz. 
+Further customisation is available for these diagrams - discussed more in the last section._ 
 
 GraphStateMachine provides a DSL for defining vertices (states) and edges (transitions) of your state machine graph. 
 Vertices must implement the `IVertex<I>` interface, and edges define the allowed transitions between states.
@@ -600,5 +564,57 @@ val (walkerState, walkerDispatcher) = walker
 The above enables controlled access and can be conducive to separation of concerns:
 - `TraverserState`/`WalkerState` provides read-only access to the current state via `current` StateFlow
 - `TraverserDispatcher`/`WalkerDispatcher` provides methods to dispatch actions that modify state
+
+</details>
+
+<details>
+<summary>Visualise your state machine</summary>
+
+GraphStateMachine can generate DOT language representations of your state machines through the `DotGenerator` class. DOT is a text-based graph description language that can be visualized with various tools.
+
+The 8-vertex DAG shown at the top of this README was created using this feature.
+
+#### Basic Usage
+
+```kotlin
+// Generate DOT representation
+val dotGenerator = DotGenerator<MyVertex, String, MyGuardState, MyArgs>()
+val dotContent = dotGenerator.generateDot(graph, "MyStateMachine")
+```
+
+#### Customization
+
+You can customize the appearance of your graph with configuration options and decorations:
+
+```kotlin
+val dotGenerator = DotGenerator<MyVertex, String, MyGuardState, MyArgs>(
+    DotConfig(
+        rankDir = "LR",  // Left to right layout
+        showEdgeIndices = true
+    )
+)
+    .decorateVertex("start", VertexDecoration(
+        description = "Start State",
+        fillColor = "green"
+    ))
+    .decorateEdge("start", "processing", EdgeDecoration(
+        description = "Begin Processing",
+        color = "blue"
+    ))
+```
+
+The `DotConfig` class provides options to control graph layout, while decoration classes allow styling of vertices, edges, and transition guards. For advanced customization, refer to DOT language documentation.
+
+#### Visualization
+
+Once generated, you can visualize your state machine using:
+
+- Graphviz (used for the example at the top of this README)
+- Online DOT viewers
+- IDE plugins
+- Python or Kotlin notebooks with appropriate libraries
+- Terminal tools
+
+This visualization helps in understanding, documenting, and debugging your state machines by providing a clear representation of your application's state flow.
 
 </details>
