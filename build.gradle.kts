@@ -37,18 +37,6 @@ java {
     withJavadocJar()
 }
 
-/*kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(8))
-    }
-}
-
-tasks.withType<KotlinCompile> {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_1_8)
-    }
-}*/
-
 tasks.named<Jar>("javadocJar") {
     from(tasks.named("dokkaJavadoc"))
     archiveClassifier.set("javadoc")
@@ -62,13 +50,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
 
-    // Add Kotest
     testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
     testImplementation("io.kotest:kotest-assertions-core:5.8.0")
     testImplementation("io.kotest:kotest-framework-datatest:5.8.0") // For data-driven tests
 
-    // reminder - an option
-    // testImplementation("io.kotest:kotest-property:5.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }
 
