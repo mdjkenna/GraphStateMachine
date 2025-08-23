@@ -4,24 +4,18 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import mdk.gsm.action.CompletableAction
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.GsmController
 import mdk.gsm.state.ITransitionGuardState
-import mdk.gsm.util.CompletableAction
-import org.jetbrains.annotations.ApiStatus
+import mdk.gsm.state.TransitionState
 
 internal class TraverserDispatcherImplementation<V, I, F, A> private constructor(
     private val scope: CoroutineScope,
     private val actionChannel: Channel<CompletableAction<V, I, A>>
 ) : TraverserDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
-
-    private val currentAction =
-        MutableStateFlow<CompletableAction<V, I, A>?>(null)
 
     override fun launchDispatch(action: GraphStateMachineAction<A>) {
         scope.launch {
@@ -33,7 +27,7 @@ internal class TraverserDispatcherImplementation<V, I, F, A> private constructor
         actionChannel.send(CompletableAction(action, CompletableDeferred()))
     }
 
-    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction<A>) : TraversalState<V, I, A> {
+    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction<A>) : TransitionState<V, I, A> {
         val completableAction = CompletableAction<V, I, A>(action, CompletableDeferred())
         dispatchInternal(completableAction)
 
@@ -44,23 +38,14 @@ internal class TraverserDispatcherImplementation<V, I, F, A> private constructor
         actionChannel.send(completableAction)
     }
 
-    @ApiStatus.Experimental
-    override suspend fun awaitNoDispatchedActions() {
-        currentAction.filter { it == null }
-            .first()
-    }
-
     override fun tearDown() {
         scope.cancel()
     }
 
-    private suspend inline fun withAction(action: CompletableAction<V, I, A>, block: suspend () -> Unit) {
-        currentAction.value = action
-        try {
-            block()
-        } finally {
-            currentAction.value = null
-        }
+    private suspend inline fun withAction(
+        crossinline block: suspend () -> Unit
+    ) {
+        block()
     }
 
     companion object {
@@ -77,7 +62,7 @@ internal class TraverserDispatcherImplementation<V, I, F, A> private constructor
 
             singleThreadedScope.launch {
                 for (action in actionChannel) {
-                    gsmDispatcherImpl.withAction(action) {
+                    gsmDispatcherImpl.withAction() {
                         gsm.dispatch(action)
                     }
                 }

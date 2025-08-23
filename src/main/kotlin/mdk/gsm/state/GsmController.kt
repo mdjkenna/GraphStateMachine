@@ -3,21 +3,20 @@
 package mdk.gsm.state
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import mdk.gsm.action.CompletableAction
 import mdk.gsm.graph.IVertex
-import mdk.gsm.graph.transition.traversal.TraversalMediator
-import mdk.gsm.state.traverser.TraversalState
-import mdk.gsm.util.CompletableAction
+import mdk.gsm.graph.transition.TransitionMediator
 
 internal class GsmController<V, I, F, A> internal constructor(
-    private val graphTraversalMediator: TraversalMediator<V, I, F, A>,
+    private val graphTransitionMediator: TransitionMediator<V, I, F, A>,
 ) where V : IVertex<I>, F : ITransitionGuardState {
 
-    val stateOut = MutableStateFlow<TraversalState<V, I, A>>(
-        graphTraversalMediator.initialReadStartVertex()
+    val stateOut = MutableStateFlow<TransitionState<V, I, A>>(
+        graphTransitionMediator.initialReadStartVertex()
     )
 
     fun tracePath(): List<V> {
-        return graphTraversalMediator.tracePath()
+        return graphTransitionMediator.tracePath()
     }
 
     suspend fun dispatch(completableAction: CompletableAction<V, I, A>) {
@@ -25,25 +24,25 @@ internal class GsmController<V, I, F, A> internal constructor(
         when (val action = completableAction.action) {
             GraphStateMachineAction.Next -> {
                 updateState(completableAction) {
-                    graphTraversalMediator.handleNext()
+                    graphTransitionMediator.handleNext()
                 }
             }
 
             GraphStateMachineAction.Previous -> {
                 updateState(completableAction) {
-                   graphTraversalMediator.handlePrevious()
+                   graphTransitionMediator.handlePrevious()
                 }
             }
 
             GraphStateMachineAction.Reset -> {
                 updateState(completableAction) {
-                   graphTraversalMediator.handleReset()
+                   graphTransitionMediator.handleReset()
                 }
             }
 
             is GraphStateMachineAction.NextArgs<A> -> {
                 updateState(completableAction) {
-                    graphTraversalMediator.handleNext(action.args)
+                    graphTransitionMediator.handleNext(action.args)
                 }
             }
         }
@@ -51,7 +50,7 @@ internal class GsmController<V, I, F, A> internal constructor(
 
     private suspend inline fun updateState(
         completableAction: CompletableAction<V, I, A>,
-        crossinline update : suspend () -> TraversalState<V, I, A>
+        crossinline update : suspend () -> TransitionState<V, I, A>
     ) {
         val newState = update()
         stateOut.value = newState

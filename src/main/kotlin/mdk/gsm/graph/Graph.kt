@@ -10,7 +10,7 @@ import mdk.gsm.state.ITransitionGuardState
  * progression. Vertices are identified by unique IDs of type `I`.
  *
  * The `Graph` class facilitates efficient lookups of vertices and their connected
- * edges. Defining all _possible_ state transitions, the [Graph] class forms the main scaffolding for the state machine's transition logic.
+ * edges. Defining all _possible_ state transitions, the [Graph] class forms the main scaffolding for the state machine's traversal logic.
  *
  * The [Graph] class is immutable if the vertex implementations are immutable.
  *

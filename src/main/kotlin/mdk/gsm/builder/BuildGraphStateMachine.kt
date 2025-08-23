@@ -4,16 +4,17 @@ package mdk.gsm.builder
 
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
-import mdk.gsm.graph.transition.traversal.EdgeTraversalType
-import mdk.gsm.graph.transition.traversal.GraphTraversalFactory
-import mdk.gsm.graph.transition.traversal.TraversalMediator
-import mdk.gsm.graph.transition.walk.GraphWalkFactory
+import mdk.gsm.graph.transition.TransitionFactory
+import mdk.gsm.graph.transition.TransitionMediator
+import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GsmConfig
 import mdk.gsm.state.GsmController
 import mdk.gsm.state.ITransitionGuardState
 
 @PublishedApi
-internal class GraphStateMachineBuilder<V, I, F, A> @PublishedApi internal constructor() where V : IVertex<I>, F : ITransitionGuardState {
+internal class GraphStateMachineBuilder<V, I, F, A> @PublishedApi internal constructor()
+        where V : IVertex<I>, F : ITransitionGuardState {
+
     var graph : Graph<V, I, F, A>? = null
     var startVertex : V? = null
     var transitionGuardState : F? = null
@@ -44,25 +45,17 @@ internal class GraphStateMachineBuilder<V, I, F, A> @PublishedApi internal const
         }
 
         check(_transitionGuardState != null) {
-            "The transition guard state must be initialised"
-        }
-
-        val graphTraversal = if (useStatelessWalk) {
-            GraphWalkFactory.buildStatelessGraphWalk(
-                graph = _graph,
-                startVertex = _startVertex
-            )
-        } else {
-            GraphTraversalFactory.buildGraphTraversal(
-                graph = _graph,
-                startVertex = _startVertex,
-                traversalType = traversalType
-            )
+            "The traversal guard state must be initialised"
         }
 
         return GsmController(
-            graphTraversalMediator = TraversalMediator(
-                graphTraversal = graphTraversal,
+            graphTransitionMediator = TransitionMediator.create(
+                capabilities = TransitionFactory.create(
+                    graph = _graph,
+                    startVertex = _startVertex,
+                    useStatelessWalk = useStatelessWalk,
+                    traversalType = traversalType
+                ),
                 transitionGuardState = _transitionGuardState,
                 gsmConfig = GsmConfig(explicitlyTransitionIntoBounds)
             )

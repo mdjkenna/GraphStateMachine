@@ -4,16 +4,16 @@ package mdk.gsm.builder
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
+import mdk.gsm.action.CompletableAction
 import mdk.gsm.builder.DispatcherConfig.Companion.toChannel
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
+import mdk.gsm.scope.GraphStateMachineScopeFactory
 import mdk.gsm.state.*
 import mdk.gsm.state.walker.Walker
-import mdk.gsm.state.walker.WalkerDispatcherImpl
+import mdk.gsm.state.walker.WalkerDispatcherImplementation
 import mdk.gsm.state.walker.WalkerImplementation
-import mdk.gsm.state.walker.WalkerStateImpl
-import mdk.gsm.util.CompletableAction
-import mdk.gsm.util.GraphStateMachineScopeFactory
+import mdk.gsm.state.walker.WalkerStateImplementation
 
 /**
  * Constructs a `Walker` with a custom [ITransitionGuardState] and support for action arguments.
@@ -58,8 +58,8 @@ fun <V, I, F, A> buildWalkerWithActions(
     val channel : Channel<CompletableAction<V, I, A>> = dispatcherConfig.toChannel()
 
     return WalkerImplementation(
-        WalkerStateImpl.create(gsm),
-        WalkerDispatcherImpl.create(gsm, coroutineScope, channel)
+        WalkerStateImplementation.create(gsm),
+        WalkerDispatcherImplementation.create(gsm, coroutineScope, channel)
     )
 }
 
@@ -105,8 +105,8 @@ fun <V, I, F> buildWalker(
     val channel : Channel<CompletableAction<V, I, Nothing>> = dispatcherConfig.toChannel()
 
     return WalkerImplementation(
-        WalkerStateImpl.create(gsm),
-        WalkerDispatcherImpl.create(gsm, coroutineScope, channel)
+        WalkerStateImplementation.create(gsm),
+        WalkerDispatcherImplementation.create(gsm, coroutineScope, channel)
     )
 }
 
@@ -146,8 +146,8 @@ fun <V, I> buildWalker(
     val channel : Channel<CompletableAction<V, I, Nothing>> = dispatcherConfig.toChannel()
 
     return WalkerImplementation(
-        WalkerStateImpl.create(gsm),
-        WalkerDispatcherImpl.create(gsm, scope, channel)
+        WalkerStateImplementation.create(gsm),
+        WalkerDispatcherImplementation.create(gsm, scope, channel)
     )
 }
 
@@ -227,22 +227,22 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
     }
 
     /**
-     * The default is `false`, in which case transition behaviour is not impacted and the concept of traversal bounds can be ignored.
-     * This can be safely ignored unless the implementer requires distinct states representing nowhere else to go via [TraversalBounds] that need to be traversed over.
+     * The default is `false`, in which case traversal behaviour is not impacted and the concept of traversal bounds can be ignored.
+     * This can be safely ignored unless the implementer requires distinct states representing nowhere else to go via [TransitionBounds] that need to be traversed over.
      *
-     * Being out-of-bounds (having nowhere else to go) for the walker (as flagged by the [mdk.gsm.state.TraversalBounds] property of [mdk.gsm.state.traverser.TraversalState])
+              * Being out-of-bounds (having nowhere else to go) for the walker (as flagged by the [mdk.gsm.state.TransitionBounds] property of [mdk.gsm.state.TransitionState])
      * is basically a null state, but with the benefit of knowing the last vertex, and the direction the state was moved in.
      *
      * The current state of the walker is always non-null, but when out of bounds, and [setExplicitTransitionIntoBounds] is `true`,
      * this could arguably be considered a kind of null object representation depending on how you want to interpret it via your use case.
      *
-     * Callers can choose to ignore the [mdk.gsm.state.TraversalBounds] and forget about this mechanism, or treat being out of bounds as a distinct state.
+     * Callers can choose to ignore the [mdk.gsm.state.TransitionBounds] and forget about this mechanism, or treat being out of bounds as a distinct state.
      *
-     * If [setExplicitTransitionIntoBounds] is `true`, the walker will treat moving back into bounds as a standalone distinct transition, moving to a
+     * If [setExplicitTransitionIntoBounds] is `true`, the walker will treat moving back into bounds as a standalone distinct traversal, moving to a
      * valid in-bounds state (*on the same vertex*) upon the next dispatched action.
      *
      * This means the [GsmController] will stay on the same vertex, but simply move into a traversal state which is in-bounds i.e.
-     * only the [mdk.gsm.state.TraversalBounds] property will be updated as being back into bounds: ([mdk.gsm.state.TraversalBounds.WithinBounds]).
+     * only the [mdk.gsm.state.TransitionBounds] property will be updated as being back into bounds: ([mdk.gsm.state.TransitionBounds.WithinBounds]).
      *
      * This can be useful to demarcate a process being "uninitialized" or "finished" for example, such as in the case of a completed workflow (workflows are typically a directed acyclic graph with a definitive 'ending') for instance,
      * allowing callers to respond to the workflow being finished.
@@ -260,9 +260,7 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
  */
 @PublishedApi
 internal fun <V, I, F, A> GraphStateMachineBuilder<V, I, F, A>.buildForWalker(): GsmController<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
-    // Set the flag to use stateless walk
     useStatelessWalk = true
 
-    // Use the regular build method which will now use the stateless walk
     return build()
 }

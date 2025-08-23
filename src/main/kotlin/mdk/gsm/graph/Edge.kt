@@ -12,12 +12,12 @@ import mdk.gsm.state.TransitionGuardScope
  * used to prioritize transitions when multiple edges originate from the same vertex.
  * A vertices edges are traversed based on [order] ascending.
  *
- * The [transitionGuard] acts as a dynamic runtime condition. If the [TransitionGuard] function returns `true`, the transition is allowed;
+ * The [transitionGuard] acts as a dynamic runtime condition. If the [TransitionGuard] function returns `true`, the traversal is allowed;
  * otherwise, it's blocked. If no [transitionGuard] has been set then traversal will not be blocked.
  *
  * @param V The type of the vertices (states). Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param F The type of the edge transition guard. Must implement [ITransitionGuardState].
+ * @param F The type of the edge traversal guard. Must implement [ITransitionGuardState].
  * @param order The priority of this edge during traversal. Lower values are evaluated first.
  * @param from The source vertex of this edge.
  * @param to The identifier of the destination vertex.

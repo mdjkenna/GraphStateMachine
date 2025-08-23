@@ -3,11 +3,11 @@ package mdk.test.utils
 import kotlinx.coroutines.CoroutineScope
 import mdk.gsm.builder.buildTraverser
 import mdk.gsm.builder.buildWalker
-import mdk.gsm.graph.transition.traversal.EdgeTraversalType
+import mdk.gsm.graph.transition.traverse.EdgeTraversalType
+import mdk.gsm.scope.GraphStateMachineScopeFactory
+import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.traverser.Traverser
 import mdk.gsm.state.walker.Walker
-import mdk.gsm.state.ITransitionGuardState
-import mdk.gsm.util.GraphStateMachineScopeFactory
 import mdk.gsm.util.StringVertex
 
 object TestBuilderUtils {

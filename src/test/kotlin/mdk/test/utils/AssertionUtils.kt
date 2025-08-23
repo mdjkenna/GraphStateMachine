@@ -2,10 +2,9 @@ package mdk.test.utils
 
 import io.kotest.matchers.shouldBe
 import mdk.gsm.graph.IVertex
+import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.traverser.Traverser
 import mdk.gsm.state.traverser.TraverserState
-import mdk.gsm.state.ITransitionGuardState
-import kotlin.collections.map
 
 object AssertionUtils {
     fun <V, I, F, A> assertTracedPathWithCurrentState(
@@ -35,8 +34,8 @@ object AssertionUtils {
         traverser: Traverser<V, I, F, A>,
         expectedPath: List<I>
     ) where V : IVertex<I>, F : ITransitionGuardState {
-        traverser.goNextAndRecordPublishedStatesUntilEnd().map { it ->
-            it.vertex.id
+        traverser.goNextAndRecordPublishedStatesUntilEnd().map { state ->
+            state.vertex.id
         } shouldBe expectedPath
     }
 
@@ -44,8 +43,8 @@ object AssertionUtils {
         traverser: Traverser<V, I, F, A>,
         expectedPath : List<I>,
     ) where V : IVertex<I>, F : ITransitionGuardState {
-        traverser.goPreviousAndRecordPublishedStatesUntilStart().map {
-            it.vertex.id
+        traverser.goPreviousAndRecordPublishedStatesUntilStart().map { state ->
+            state.vertex.id
         } shouldBe expectedPath
     }
 }

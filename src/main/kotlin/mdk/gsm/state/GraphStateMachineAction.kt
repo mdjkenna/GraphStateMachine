@@ -4,7 +4,7 @@ package mdk.gsm.state
  * Represents actions that can be dispatched to a graph state machine.
  *
  * Actions are processed by the graph state machine in the order they are received.
- * with each action causing a new [mdk.gsm.state.traverser.TraversalState] to be published and potentially a transition to a new vertex.
+ * with each action causing a new [mdk.gsm.state.traverser.TraversalState] to be published and potentially a traversal to a new vertex.
  *
  * @param A The type of arguments that can be passed with certain actions (specifically [NextArgs]).
  *          This allows for passing contextual data during state transitions.
