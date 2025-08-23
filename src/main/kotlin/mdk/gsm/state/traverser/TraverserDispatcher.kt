@@ -3,7 +3,7 @@ package mdk.gsm.state.traverser
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.ITransitionGuardState
-import org.jetbrains.annotations.ApiStatus
+import mdk.gsm.state.TransitionState
 
 /**
  * Interface for dispatching actions to a graph-based traverser, causing state transitions.
@@ -20,7 +20,7 @@ import org.jetbrains.annotations.ApiStatus
  *
  * @param V The type of vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param F The type of transition guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param F The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see mdk.gsm.state.GraphStateMachineAction
@@ -42,7 +42,7 @@ interface TraverserDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionG
      * Suspends the current coroutine and dispatches an action to the traverser.
      *
      * This method suspends until the action is received by the traverser, but does not
-     * wait for the action to be fully processed or for the state transition to complete.
+     * wait for the action to be fully processed or for the state traversal to complete.
      *
      * @param action The [GraphStateMachineAction] to dispatch to the traverser
      */
@@ -51,23 +51,13 @@ interface TraverserDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionG
     /**
      * Dispatches an action to the traverser and awaits the resulting state.
      *
-     * This method suspends until the action is fully processed and the state transition is complete,
+     * This method suspends until the action is fully processed and the state traversal is complete,
      * then returns the new state of the traverser.
      *
      * @param action The [GraphStateMachineAction] to dispatch to the traverser
-     * @return The [TraversalState] representing the new state after the action is processed
+     * @return The [TransitionState] representing the new state after the action is processed
      */
-    suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction<A>): TraversalState<V, I, A>
-
-    /**
-     * Suspends until all previously dispatched actions have been fully consumed and the queue is empty.
-     * This has niche uses such as throttling actions.
-     *
-     * Note: This API is experimental and may change in future releases.
-     * This method does not wait for the last action in the queue to finish processing.
-     */
-    @ApiStatus.Experimental
-    suspend fun awaitNoDispatchedActions()
+    suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction<A>): TransitionState<V, I, A>
 
     /**
      * Tears down the traverser, cancelling all associated jobs.

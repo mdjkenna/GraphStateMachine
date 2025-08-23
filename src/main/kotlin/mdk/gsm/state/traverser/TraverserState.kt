@@ -3,6 +3,7 @@ package mdk.gsm.state.traverser
 import kotlinx.coroutines.flow.StateFlow
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.TransitionState
 
 /**
  * Interface for reading the current state and traversal history of a graph-based traverser.
@@ -12,18 +13,18 @@ import mdk.gsm.state.ITransitionGuardState
  *
  * @param V The type of vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param F The type of transition guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param F The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
- * @see TraversalState
+ * @see TransitionState
  * @see Traverser
  * @see TraverserDispatcher
  */
 interface TraverserState<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
     /**
-     * A [StateFlow] that publishes the current state of the traverser as a [TraversalState]
+     * A [StateFlow] that publishes the current state of the traverser as a [TransitionState]
      */
-    val current : StateFlow<TraversalState<V, I, A>>
+    val current : StateFlow<TransitionState<V, I, A>>
 
     /**
      * Returns the history of vertices traversed by the traverser.

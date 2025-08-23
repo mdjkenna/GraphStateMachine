@@ -4,13 +4,14 @@ import kotlinx.coroutines.flow.StateFlow
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.TransitionState
 
 internal class TraverserImplementation<V, I, F, A> (
     override val traverserState: TraverserState<V, I, F, A>,
     override val traverserDispatcher: TraverserDispatcher<V, I, F, A>
 ) : Traverser<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
 
-    override val current: StateFlow<TraversalState<V, I, A>>
+    override val current: StateFlow<TransitionState<V, I, A>>
         get() = traverserState.current
 
     override fun tracePath(): List<V> {
@@ -25,12 +26,8 @@ internal class TraverserImplementation<V, I, F, A> (
         traverserDispatcher.dispatch(action)
     }
 
-    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction<A>): TraversalState<V, I, A> {
+    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction<A>): TransitionState<V, I, A> {
         return traverserDispatcher.dispatchAndAwaitResult(action)
-    }
-
-    override suspend fun awaitNoDispatchedActions() {
-        traverserDispatcher.awaitNoDispatchedActions()
     }
 
     override fun tearDown() {

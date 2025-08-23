@@ -4,7 +4,7 @@ import mdk.gsm.builder.GsmBuilderScope
 import mdk.gsm.graph.IVertex
 
 /**
- * A conditional function that controls whether a transition along an edge is permitted during graph traversal.
+ * A conditional function that controls whether a traversal along an edge is permitted during graph traversal.
  *
  * A [TransitionGuard] function is associated with an [mdk.gsm.graph.Edge] and is evaluated when the state machine
  * attempts to traverse that edge.
@@ -15,11 +15,11 @@ import mdk.gsm.graph.IVertex
  * As a lambda with receiver the functions implementation occurs within a [TransitionGuardScope],
  * which can be used to make decisions about traversal.
  *
- * @return `true` to allow the transition along this edge, `false` to prevent it and try the next edge
+ * @return `true` to allow the traversal along this edge, `false` to prevent it and try the next edge
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state shared across the state machine. Must implement [ITransitionGuardState].
+ * @param F The type of traversal guard state shared across the state machine. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions to influence traversal decisions.
  *
  * @see mdk.gsm.graph.Edge
@@ -35,13 +35,13 @@ typealias TransitionGuard<V, I, F, A> =
  * This scope is automatically created and passed to a [TransitionGuard] function when the state machine
  * evaluates whether an edge can be traversed.
  *
- * This scope enables transition guards to make decisions based on:
+ * This scope enables traversal guards to make decisions based on:
  * - Properties of the source vertex
  * - Shared state that may have been modified by previous traversals
  * - Arguments provided with the current action
  *
  * @property from The source vertex of the edge being evaluated. This is the vertex the edge is outgoing from.
- * @property guardState The shared transition guard state for the entire state machine. This single instance
+ * @property guardState The shared traversal guard state for the entire state machine. This single instance
  *                     is shared across all edge evaluations, allowing for communication between edges and
  *                     persistence of state across transitions.
  * @property args Any arguments passed with the current action, typically from a [GraphStateMachineAction.NextArgs].
@@ -49,7 +49,7 @@ typealias TransitionGuard<V, I, F, A> =
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param F The type of traversal guard state. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions.
  *
  * @see TransitionGuard

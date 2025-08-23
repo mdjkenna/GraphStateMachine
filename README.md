@@ -387,6 +387,83 @@ This shared state can be used to:
 </details>
 
 <details>
+<summary>Handling Before Incoming and Outgoing transitions</summary>
+
+GraphStateMachine provides two types of handlers that allow you to execute custom logic at specific points during state transitions: `BeforeVisitHandler` and `OutgoingTransitionHandler`. These handlers give you fine-grained control over the state machine's behavior and enable you to implement complex logic within your state transitions.
+
+#### BeforeVisitHandler - Before Arriving
+
+`BeforeVisitHandler` executes custom logic immediately before arriving at a vertex - that is, before a vertex is visited and before that vertex is published as the current state. This handler is invoked when the state machine is about to transition to a new vertex. It is particularly useful for performing setup operations, validating preconditions, or executing custom logic before arriving at the new state.
+
+```kotlin
+addVertex(loadingState) {
+    onBeforeVisit {
+        // Access the vertex about to be visited
+        println("About to visit: ${vertex.id}")
+
+        // Access any arguments passed with the action
+        args?.let { arguments ->
+            println("Action arguments: $arguments")
+        }
+
+        // Perform setup operations
+        initializeResources()
+
+        // Control automatic progression
+        autoAdvance()
+    }
+
+    addEdge {
+        setTo(nextState)
+    }
+}
+```
+
+The `BeforeVisitHandler` receives a `BeforeVisitScope` which provides access to:
+- The vertex that is about to be visited
+- The shared guard state for the entire state machine
+- Any arguments passed with the current action
+
+The `BeforeVisitHandler` can call `autoAdvance()`, which signals the state machine to automatically advance to the next state without publishing the current vertex as the state, allowing for automatic progression through certain vertices.
+
+#### OutgoingTransitionHandler - Before Leaving
+
+`OutgoingTransitionHandler` executes custom logic before leaving a vertex - that is, before any outgoing transitions are explored from the current vertex. This handler is invoked when the state machine is about to consider transitions away from the current state. It allows you to control whether transitions should occur at all, making it useful for implementing conditional navigation logic.
+
+```kotlin
+addVertex(conditionalState) {
+    onOutgoingTransition {
+        // Access the current vertex
+        println("Considering transitions from: ${vertex.id}")
+
+        // Access arguments and guard state
+        if (args?.shouldStayInCurrentState == true) {
+            // Prevent any transitions from occurring
+            noTransition()
+        }
+
+        // Perform any logic before transitions are considered
+        updateTransitionMetrics()
+    }
+
+    addEdge {
+        setTo(nextState)
+    }
+}
+```
+
+The `OutgoingTransitionHandler` receives an `OutgoingTransitionScope` which provides access to:
+- The current vertex from which transitions are being considered
+- The shared guard state for the entire state machine  
+- Any arguments passed with the current action
+
+The `OutgoingTransitionHandler` can call `noTransition()`, which prevents the state machine from exploring any outgoing edges and keeps the current vertex as the state. This is particularly useful for implementing conditional logic that determines whether state transitions should occur based on runtime conditions.
+
+Both handlers are suspend functions, allowing them to perform asynchronous operations as needed. They integrate seamlessly with the state machine's single-threaded actor model, ensuring predictable and atomic execution.
+
+</details>
+
+<details>
 <summary>Intermediate States</summary>
 
 Intermediate states are "in-between" states that are automatically advanced through without being published as the current state.

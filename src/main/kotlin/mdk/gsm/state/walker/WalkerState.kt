@@ -2,7 +2,7 @@ package mdk.gsm.state.walker
 
 import kotlinx.coroutines.flow.StateFlow
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.traverser.TraversalState
+import mdk.gsm.state.TransitionState
 
 /**
  * Interface for reading the current state of a graph-based walker.
@@ -15,13 +15,13 @@ import mdk.gsm.state.traverser.TraversalState
  * @param I The type of vertex identifiers used in the graph.
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
- * @see TraversalState
+ * @see TransitionState
  * @see Walker
  * @see WalkerDispatcher
  */
 interface WalkerState<V, I, A> where V : IVertex<I> {
     /**
-     * A [StateFlow] that publishes the current state of the walker as a [TraversalState]
+     * A [StateFlow] that publishes the current state of the walker as a [TransitionState]
      */
-    val current : StateFlow<TraversalState<V, I, A>>
+    val current : StateFlow<TransitionState<V, I, A>>
 }

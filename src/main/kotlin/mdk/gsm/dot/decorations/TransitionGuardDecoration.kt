@@ -1,10 +1,10 @@
 package mdk.gsm.dot.decorations
 
 /**
- * Decoration for transition guards in the dot file.
+ * Decoration for traversal guards in the dot file.
  *
- * @property description Description text to display for the transition guard
+ * @property description Description text to display for the traversal guard
  */
-data class  TransitionGuardDecoration(
+data class TransitionGuardDecoration(
     val description: String
 )

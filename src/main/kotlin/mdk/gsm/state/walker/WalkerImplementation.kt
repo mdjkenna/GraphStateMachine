@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.StateFlow
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.ITransitionGuardState
-import mdk.gsm.state.traverser.TraversalState
+import mdk.gsm.state.TransitionState
 
 /**
  * Implementation of the [Walker] interface.
@@ -22,7 +22,7 @@ internal class WalkerImplementation<V, I, F, A> (
     override val walkerDispatcher: WalkerDispatcher<V, I, F, A>
 ) : Walker<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
 
-    override val current: StateFlow<TraversalState<V, I, A>>
+    override val current: StateFlow<TransitionState<V, I, A>>
         get() = walkerState.current
 
     override fun launchDispatch(action: GraphStateMachineAction.Next) {
@@ -49,20 +49,16 @@ internal class WalkerImplementation<V, I, F, A> (
         walkerDispatcher.dispatch(action)
     }
 
-    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction.Next): TraversalState<V, I, A> {
+    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction.Next): TransitionState<V, I, A> {
         return walkerDispatcher.dispatchAndAwaitResult(action)
     }
 
-    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction.NextArgs<A>): TraversalState<V, I, A> {
+    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction.NextArgs<A>): TransitionState<V, I, A> {
         return walkerDispatcher.dispatchAndAwaitResult(action)
     }
 
-    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction.Reset): TraversalState<V, I, A> {
+    override suspend fun dispatchAndAwaitResult(action: GraphStateMachineAction.Reset): TransitionState<V, I, A> {
         return walkerDispatcher.dispatchAndAwaitResult(action)
-    }
-
-    override suspend fun awaitNoDispatchedActions() {
-        walkerDispatcher.awaitNoDispatchedActions()
     }
 
     override fun tearDown() {

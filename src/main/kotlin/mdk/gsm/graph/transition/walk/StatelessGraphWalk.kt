@@ -3,15 +3,16 @@ package mdk.gsm.graph.transition.walk
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.VertexContainer
-import mdk.gsm.graph.transition.IGraphTraversal
-import mdk.gsm.graph.transition.traversal.TraversalPathNode
+import mdk.gsm.graph.transition.IForwardTransition
+import mdk.gsm.graph.transition.IResettable
+import mdk.gsm.graph.transition.traverse.TraversalPathNode
 import mdk.gsm.state.ITransitionGuardState
 
 
 internal class StatelessGraphWalk<V, I, F, A>(
     private val graph: Graph<V, I, F, A>,
     private val startVertex: V,
-) : IGraphTraversal<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+) : IForwardTransition<V, I, F, A>, IResettable<V> where V : IVertex<I>, F : ITransitionGuardState {
 
     private var currentVertex: V = startVertex
     private var currentPathNode: TraversalPathNode<V, A> = TraversalPathNode(vertex = startVertex)
@@ -33,17 +34,12 @@ internal class StatelessGraphWalk<V, I, F, A>(
                 continue
             }
 
-            val nextVertex = graph.getVertex(edge.to) ?: continue
-
-            val oldPathNode = if (autoAdvance && !currentPathNode.isIntermediate) {
-                currentPathNode.copy(isIntermediate = true)
-            } else {
-                currentPathNode
-            }
+            val nextVertex = graph.getVertex(edge.to)
+                ?: continue
 
             val newPathNode = TraversalPathNode(
                 vertex = nextVertex,
-                left = oldPathNode,
+                left = null,
                 args = args
             )
 
@@ -52,7 +48,7 @@ internal class StatelessGraphWalk<V, I, F, A>(
 
             return newPathNode
         }
-
+        
         return null
     }
 
@@ -64,38 +60,12 @@ internal class StatelessGraphWalk<V, I, F, A>(
     }
 
     /**
-     * This operation is not supported in a stateless walk.
-     * Always returns null as we don't support backtracking.
-     */
-    override fun movePrevious(): TraversalPathNode<V, A>? {
-        return null
-    }
-
-    /**
      * Resets the walk to the start vertex.
      */
     override fun reset(): V {
         currentVertex = startVertex
         currentPathNode = TraversalPathNode(vertex = startVertex)
         return startVertex
-    }
-
-    /**
-     * Returns the current path as a list.
-     * Note: Since this is a stateless walk, we only track the current path node
-     * and its immediate predecessor for the purpose of supporting autoAdvance.
-     */
-    override fun tracePath(): List<V> {
-        val path = ArrayList<V>()
-        var current: TraversalPathNode<V, A>? = currentPathNode
-
-        while (current != null) {
-            path.add(current.vertex)
-            current = current.left
-        }
-
-        path.reverse()
-        return path
     }
 
     /**

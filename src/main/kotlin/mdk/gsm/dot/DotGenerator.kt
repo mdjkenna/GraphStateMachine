@@ -13,7 +13,7 @@ import mdk.gsm.state.ITransitionGuardState
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param F The type of traversal guard state. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions.
  * @param config Configuration for DOT graph layout and appearance.
  */
@@ -51,7 +51,7 @@ class DotGenerator<V, I, F, A>(
     }
 
     /**
-     * Set decoration for a transition guard.
+     * Set decoration for a traversal guard.
      *
      * @param fromId The ID of the source vertex
      * @param toId The ID of the destination vertex

@@ -40,8 +40,8 @@ class EdgeBuilderScope<V, I, F, A> internal constructor(
      * Sets the [TransitionGuard] for this edge.
      * @see TransitionGuard
      *
-     * @param transitionGuard The function controlling transition across this edge. Receives a
-     *   [mdk.gsm.state.TransitionGuardScope] and returns `true` to allow the transition, `false` to prevent it.
+     * @param transitionGuard The function controlling traversal across this edge. Receives a
+     *   [mdk.gsm.state.TransitionGuardScope] and returns `true` to allow the traversal, `false` to prevent it.
      */
     fun setEdgeTransitionGuard(transitionGuard : TransitionGuard<V, I, F, A>) {
         edgeBuilder.transitionGuard = transitionGuard

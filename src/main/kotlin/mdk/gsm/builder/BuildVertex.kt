@@ -7,6 +7,7 @@ import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.VertexContainer
 import mdk.gsm.state.BeforeVisitHandler
 import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.OutgoingTransitionHandler
 
 @GsmBuilderScope
 class VertexBuilderScope<V, I, F, A> internal constructor(
@@ -59,6 +60,17 @@ class VertexBuilderScope<V, I, F, A> internal constructor(
     fun onBeforeVisit(handler: BeforeVisitHandler<V, I, F, A>) {
         vertexContainerBuilder.beforeVisitHandler = handler
     }
+
+    /**
+     * Define the [OutgoingTransitionHandler] which is invoked before any outgoing transitions are explored.
+     * This can be used to prevent transitions entirely, keeping the state machine in its current state.
+     *
+     * @see [OutgoingTransitionHandler]
+     * @see [mdk.gsm.state.OutgoingTransitionScope]
+     */
+    fun onOutgoingTransition(handler: OutgoingTransitionHandler<V, I, F, A>) {
+        vertexContainerBuilder.outgoingTransitionHandler = handler
+    }
 }
 
 internal class VertexBuilder<V, I, F, A>(
@@ -67,6 +79,7 @@ internal class VertexBuilder<V, I, F, A>(
 
     private val adjacent = HashMap<I, Edge<V, I, F, A>>()
     var beforeVisitHandler: BeforeVisitHandler<V, I, F, A>? = null
+    var outgoingTransitionHandler: OutgoingTransitionHandler<V, I, F, A>? = null
 
     val numberOfEdges: Int
         get() = adjacent.size
@@ -83,7 +96,8 @@ internal class VertexBuilder<V, I, F, A>(
         return VertexContainer(
             vertex = stepInstance,
             adjacentOrdered = sortedEdges,
-            beforeVisitHandler = beforeVisitHandler
+            beforeVisitHandler = beforeVisitHandler,
+            outgoingTransitionHandler = outgoingTransitionHandler
         )
     }
 }
