@@ -4,8 +4,8 @@ import java.util.*
 data class GsmUserAndPassword(val gsmUser : String, val gsmPassword : String)
 
 val gsmUserAndPassword : GsmUserAndPassword by lazy {
-    var gsmUser = System.getenv("GSM_USER")
-    var gsmPassword = System.getenv("GSM_PASSWORD")
+    var gsmUser : String? = System.getenv("GSM_USER")
+    var gsmPassword: String? = System.getenv("GSM_PASSWORD")
 
     if(gsmUser.isNullOrBlank() || gsmPassword.isNullOrBlank()) {
         val localPropertiesFile = rootProject.file("local.properties")
@@ -21,7 +21,10 @@ val gsmUserAndPassword : GsmUserAndPassword by lazy {
         }
     }
 
-    GsmUserAndPassword(gsmUser, gsmPassword)
+    GsmUserAndPassword(
+        gsmUser ?: throw Exception("GSM User not found"),
+        gsmPassword ?: throw Exception("GSM Password not found")
+    )
 }
 
 object Props {
@@ -49,14 +52,6 @@ tasks.jacocoTestReport {
 
 repositories {
     mavenCentral()
-    maven {
-        name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/mdjkenna/GraphStateMachine")
-        credentials {
-            username = gsmUserAndPassword.gsmUser
-            password = gsmUserAndPassword.gsmPassword
-        }
-    }
 }
 
 group = "com.github.mdjkenna"
@@ -134,17 +129,6 @@ publishing {
                     developerConnection.set("scm:git:ssh://github.com:mdjkenna/GraphStateMachine.git")
                     url.set("https://github.com/mdjkenna/GraphStateMachine")
                 }
-            }
-        }
-    }
-    
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/mdjkenna/GraphStateMachine")
-            credentials {
-                username = gsmUserAndPassword.gsmUser
-                password = gsmUserAndPassword.gsmPassword
             }
         }
     }
