@@ -1,6 +1,5 @@
 [![Build](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/buildAndTest.yml/badge.svg)](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/buildAndTest.yml)
 [![codecov](https://codecov.io/gh/mdjkenna/GraphStateMachine/branch/master/graph/badge.svg)](https://codecov.io/gh/mdjkenna/GraphStateMachine)
-[![](https://jitpack.io/v/mdjkenna/GraphStateMachine.svg)](https://jitpack.io/#mdjkenna/GraphStateMachine)
 ![GitHub](https://img.shields.io/github/license/mdjkenna/GraphStateMachine)
 ![GitHub last commit](https://img.shields.io/github/last-commit/mdjkenna/GraphStateMachine)
 [![GitHub top language](https://img.shields.io/github/languages/top/mdjkenna/GraphStateMachine.svg)](https://github.com/mdjkenna/GraphStateMachine)
@@ -35,15 +34,6 @@ The API is explained in detail in the following sections.
 
 ## Adding the Library to Your Project
 
-Include the JitPack repository in your project. For example:
-
-```kotlin 
-repositories {
-    mavenCentral()
-    maven("https://jitpack.io")
-}
-```
-
 Then add GraphStateMachine as a dependency:
 
 ```kotlin
@@ -51,9 +41,6 @@ dependencies {
     implementation("com.github.mdjkenna:GraphStateMachine:<latest-release>")
 }
 ```
-
-Find the latest release version at the top of this README or in the Releases section of the GitHub repository.
-All versions with a major version of `0` are experimental and may include breaking API changes.
 
 ## Getting Started
 
