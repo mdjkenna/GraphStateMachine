@@ -1,5 +1,34 @@
+import java.io.FileInputStream
+import java.util.*
+
+data class GsmUserAndPassword(val gsmUser : String?, val gsmPassword : String?)
+
+val gsmUserAndPassword : GsmUserAndPassword by lazy {
+    var gsmUser : String? = System.getenv("GSM_USER")
+    var gsmPassword: String? = System.getenv("GSM_PASSWORD")
+
+    if(gsmUser.isNullOrBlank() || gsmPassword.isNullOrBlank()) {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            val properties = Properties()
+            FileInputStream(localPropertiesFile).use { properties.load(it) }
+            properties.forEach { (key, value) ->
+                extra[key.toString()] = value
+            }
+
+            gsmUser = properties["GSM_USER"] as? String
+            gsmPassword = properties["GSM_PASSWORD"] as? String
+        }
+    }
+
+    GsmUserAndPassword(
+        gsmUser,
+        gsmPassword
+    )
+}
+
 object Props {
-    const val VERSION = "0.3.11"
+    const val VERSION = "1.00-beta.02"
 }
 
 plugins {
@@ -46,18 +75,17 @@ dependencies {
     implementation(kotlin("stdlib"))
     testImplementation(kotlin("test"))
 
-    // Add JUnit 5
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
 
     testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
     testImplementation("io.kotest:kotest-assertions-core:5.8.0")
-    testImplementation("io.kotest:kotest-framework-datatest:5.8.0") // For data-driven tests
+    testImplementation("io.kotest:kotest-framework-datatest:5.8.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }
 
-/*tasks.dokkaJavadoc {
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
     dokkaSourceSets {
         named("main") {
             includeNonPublic.set(false)
@@ -66,7 +94,7 @@ dependencies {
             jdkVersion.set(8)
         }
     }
-}*/
+}
 
 publishing {
     publications {
@@ -87,8 +115,32 @@ publishing {
                         url.set("https://www.apache.org/licenses/LICENSE-2.0")
                     }
                 }
-            }
 
+                developers {
+                    developer {
+                        id.set("mdjkenna")
+                        name.set("mdjkenna")
+                        email.set("mdjkenna5813@gmail.com")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/mdjkenna/GraphStateMachine.git")
+                    developerConnection.set("scm:git:ssh://github.com:mdjkenna/GraphStateMachine.git")
+                    url.set("https://github.com/mdjkenna/GraphStateMachine")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/mdjkenna/GraphStateMachine")
+            credentials {
+                username = gsmUserAndPassword.gsmUser
+                password = gsmUserAndPassword.gsmPassword
+            }
         }
     }
 }
