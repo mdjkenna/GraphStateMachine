@@ -59,7 +59,7 @@ interface WalkerDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionGuar
      * Suspends the current coroutine and dispatches a Next action to the walker.
      *
      * This method suspends until the action is received by the walker, but does not
-     * wait for the action to be fully processed or for the state traversal to complete.
+     * wait for the action to be fully processed or for the state transition to complete.
      */
     suspend fun dispatch(action: GraphStateMachineAction.Next)
 
@@ -67,7 +67,7 @@ interface WalkerDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionGuar
      * Suspends the current coroutine and dispatches a NextArgs action to the walker.
      *
      * This method suspends until the action is received by the walker, but does not
-     * wait for the action to be fully processed or for the state traversal to complete.
+     * wait for the action to be fully processed or for the state transition to complete.
      *
      * @param action The [GraphStateMachineAction.NextArgs] to dispatch to the walker
      */
@@ -77,14 +77,14 @@ interface WalkerDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionGuar
      * Suspends the current coroutine and dispatches a Reset action to the walker.
      *
      * This method suspends until the action is received by the walker, but does not
-     * wait for the action to be fully processed or for the state traversal to complete.
+     * wait for the action to be fully processed or for the state transition to complete.
      */
     suspend fun dispatch(action: GraphStateMachineAction.Reset)
 
     /**
      * Dispatches a Next action to the walker and awaits the resulting state.
      *
-     * This method suspends until the action is fully processed and the state traversal is complete,
+     * This method suspends until the action is fully processed and the state transition is complete,
      * then returns the new state of the walker.
      *
      * @return The [TransitionState] representing the new state after the action is processed
@@ -94,7 +94,7 @@ interface WalkerDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionGuar
     /**
      * Dispatches a NextArgs action to the walker and awaits the resulting state.
      *
-     * This method suspends until the action is fully processed and the state traversal is complete,
+     * This method suspends until the action is fully processed and the state transition is complete,
      * then returns the new state of the walker.
      *
      * @param action The [GraphStateMachineAction.NextArgs] to dispatch to the walker
@@ -105,7 +105,7 @@ interface WalkerDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionGuar
     /**
      * Dispatches a Reset action to the walker and awaits the resulting state.
      *
-     * This method suspends until the action is fully processed and the state traversal is complete,
+     * This method suspends until the action is fully processed and the state transition is complete,
      * then returns the new state of the walker.
      *
      * @return The [TransitionState] representing the new state after the action is processed

@@ -42,7 +42,7 @@ interface TraverserDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionG
      * Suspends the current coroutine and dispatches an action to the traverser.
      *
      * This method suspends until the action is received by the traverser, but does not
-     * wait for the action to be fully processed or for the state traversal to complete.
+     * wait for the action to be fully processed or for the state transition to complete.
      *
      * @param action The [GraphStateMachineAction] to dispatch to the traverser
      */
@@ -51,7 +51,7 @@ interface TraverserDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionG
     /**
      * Dispatches an action to the traverser and awaits the resulting state.
      *
-     * This method suspends until the action is fully processed and the state traversal is complete,
+     * This method suspends until the action is fully processed and the state transition is complete,
      * then returns the new state of the traverser.
      *
      * @param action The [GraphStateMachineAction] to dispatch to the traverser
