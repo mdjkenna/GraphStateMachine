@@ -1,6 +1,6 @@
 [![Build](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/buildAndTest.yml/badge.svg)](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/buildAndTest.yml)
 [![codecov](https://codecov.io/gh/mdjkenna/GraphStateMachine/branch/master/graph/badge.svg)](https://codecov.io/gh/mdjkenna/GraphStateMachine)
-[![](https://jitpack.io/v/mdjkenna/GraphStateMachine.svg)](https://jitpack.io/#mdjkenna/GraphStateMachine)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.mdjkenna/graph-state-machine.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.mdjkenna/graph-state-machine)
 ![GitHub](https://img.shields.io/github/license/mdjkenna/GraphStateMachine)
 ![GitHub last commit](https://img.shields.io/github/last-commit/mdjkenna/GraphStateMachine)
 [![GitHub top language](https://img.shields.io/github/languages/top/mdjkenna/GraphStateMachine.svg)](https://github.com/mdjkenna/GraphStateMachine)
@@ -35,25 +35,18 @@ The API is explained in detail in the following sections.
 
 ## Adding the Library to Your Project
 
-Include the JitPack repository in your project. For example:
-
-```kotlin 
-repositories {
-    mavenCentral()
-    maven("https://jitpack.io")
-}
-```
-
-Then add GraphStateMachine as a dependency:
+Add Maven Central and then add the package as a dependency. Replace `<version>` with the required version.
+The latest version is visible above in the Maven badge.
 
 ```kotlin
+repositories {
+    mavenCentral()
+}
+
 dependencies {
-    implementation("com.github.mdjkenna:GraphStateMachine:<latest-release>")
+    implementation("io.github.mdjkenna:graph-state-machine:<version>")
 }
 ```
-
-Find the latest release version at the top of this README or in the Releases section of the GitHub repository.
-All versions with a major version of `0` are experimental and may include breaking API changes.
 
 ## Getting Started
 

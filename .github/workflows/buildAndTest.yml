@@ -28,6 +28,9 @@ jobs:
 
       - name: Run Unit Tests
         run: ./gradlew clean test jacocoTestReport
+        env:
+          GSM_USER: ${{ secrets.GSM_USER }}
+          GSM_PASSWORD: ${{ secrets.GSM_PASSWORD }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
