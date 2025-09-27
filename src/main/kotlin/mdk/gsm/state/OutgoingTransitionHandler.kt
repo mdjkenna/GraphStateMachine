@@ -25,7 +25,7 @@ class OutgoingTransitionScope<V, I, F, A>(
     internal var noChange = false
 
     /**
-     * Signals that the state machine should not traversal at all,
+     * Signals that the state machine should not traverse at all,
      * effectively keeping the current vertex as the state.
      *
      * When called, the state machine will skip exploring any outgoing edges
@@ -41,7 +41,7 @@ class OutgoingTransitionScope<V, I, F, A>(
 /**
  * This handler can be associated with a specific vertex during graph construction.
  * It is a function that executes custom logic before any outgoing transitions are explored.
- *
+{{ ... }}
  * The handler is invoked when the state machine is about to consider transitions from the current vertex.
  * It receives an [OutgoingTransitionScope] as its receiver, providing access to the current vertex,
  * the shared traversal guard state, and any arguments passed with the current action.

@@ -12,6 +12,7 @@ jobs:
       contents: read
 
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -28,10 +29,24 @@ jobs:
       - name: Run Tests
         run: ./gradlew clean test
 
+      - name: Check credentials
+        run: |
+          if [ -z "${GSM_USER// }" ]; then
+            echo "GSM_USER is missing or blank (set repository secret GSM_USER)."
+            exit 1
+          fi
+          if [ -z "${GSM_PASSWORD// }" ]; then
+            echo "GSM_PASSWORD is missing or blank (set repository secret GSM_PASSWORD)."
+            exit 1
+          fi
+        env:
+          GSM_USER: ${{ secrets.GSM_USER }}
+          GSM_PASSWORD: ${{ secrets.GSM_PASSWORD }}
+
       - name: Build and Publish
         run: ./gradlew publish --info --stacktrace
         env:
-          GSM_USER: ${{ secrets.GSM_USERNAME }}
+          GSM_USER: ${{ secrets.GSM_USER }}
           GSM_PASSWORD: ${{ secrets.GSM_PASSWORD }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}

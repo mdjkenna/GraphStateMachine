@@ -10,20 +10,41 @@ import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.OutgoingTransitionHandler
 
 @GsmBuilderScope
+/**
+ * DSL scope for configuring a single vertex in the graph.
+ *
+ */
 class VertexBuilderScope<V, I, F, A> internal constructor(
     private val vertexContainerBuilder: VertexBuilder<V, I, F, A>
 ) where V : IVertex<I>, F : ITransitionGuardState {
 
     /**
-     * Adds an outgoing edge from the current vertex to a destination vertex.
-     * If [autoOrder] is `true` (default), the [Edge.order] value is automatically assigned based on the existing
-     * outgoing edge count. If false, then it must be set manually.
+     * Adds an outgoing edge from this vertex to a destination vertex.
      *
-     * @param V The type of the vertices (states). Must implement [IVertex].
-     * @param I The type of the vertex identifiers.
-     * @param F Must implement [ITransitionGuardState].
-     * @param autoOrder Automatically assign the edge's order. Defaults to `true`.
-     * @param edgeBuilderScope Lambda receiving an [EdgeBuilderScope] to configure the edge.
+     * Ordering:
+     * - When [autoOrder] is `true` (default), [Edge.order] is assigned automatically in insertion order.
+     * - When `false`, you must set the order explicitly via [EdgeBuilderScope.setOrder].
+     *
+     * Destination:
+     * - Set the target via [EdgeBuilderScope.setTo] using an `id` or a vertex instance.
+     * - Optionally set a transition guard with [EdgeBuilderScope.setEdgeTransitionGuard].
+     *
+     * Example:
+     * ```kotlin
+     * // Auto-ordered edge
+     * addEdge {
+     *     setTo(MyVertex.Next)
+     * }
+     *
+     * // Manually ordered edge
+     * addEdge(autoOrder = false) {
+     *     setOrder(10)
+     *     setTo(MyVertex.Done)
+     * }
+     * ```
+     *
+     * @param autoOrder If `true`, assign [Edge.order] automatically; otherwise set it manually.
+     * @param edgeBuilderScope DSL to configure the edge via [EdgeBuilderScope].
      */
     fun addEdge(
         autoOrder : Boolean = true,
@@ -42,9 +63,7 @@ class VertexBuilderScope<V, I, F, A> internal constructor(
     }
 
     /**
-     * Shorthand for [addEdge]
-     *
-     * @see addEdge
+     * Shorthand for [addEdge] with identical semantics and parameters.
      */
     fun e(
         autoOrder: Boolean = true,
@@ -52,21 +71,44 @@ class VertexBuilderScope<V, I, F, A> internal constructor(
     ) = addEdge(autoOrder, edgeBuilderScope)
 
     /**
-     * Define the [BeforeVisitHandler] which is invoked just before this vertex becomes published state and can be used to define intermediate states.
+     * Sets a [BeforeVisitHandler] that runs just before this vertex is published as the current state.
      *
-     * @see [BeforeVisitHandler]
-     * @see [mdk.gsm.state.BeforeVisitScope]
+     * Typical uses:
+     * - Perform setup work before observers see this state
+     * - Mark the vertex as an intermediate state by calling `autoAdvance()` in the handler, so it is not published
+     *
+     * Example:
+     * ```kotlin
+     * onBeforeVisit {
+     *     // perform setup
+     *     // optionally skip publishing this vertex
+     *     // autoAdvance()
+     * }
+     * ```
+     *
+     * @see BeforeVisitHandler
+     * @see mdk.gsm.state.BeforeVisitScope
      */
     fun onBeforeVisit(handler: BeforeVisitHandler<V, I, F, A>) {
         vertexContainerBuilder.beforeVisitHandler = handler
     }
 
     /**
-     * Define the [OutgoingTransitionHandler] which is invoked before any outgoing transitions are explored.
-     * This can be used to prevent transitions entirely, keeping the state machine in its current state.
+     * Sets an [OutgoingTransitionHandler] that runs before any outgoing transitions are explored.
      *
-     * @see [OutgoingTransitionHandler]
-     * @see [mdk.gsm.state.OutgoingTransitionScope]
+     * Use this to prevent transitions entirely by calling `noTransition()`, keeping the state machine at
+     * the current vertex.
+     *
+     * Example:
+     * ```kotlin
+     * onOutgoingTransition {
+     *     val allowed = /* validate */ true
+     *     if (!allowed) noTransition()
+     * }
+     * ```
+     *
+     * @see OutgoingTransitionHandler
+     * @see mdk.gsm.state.OutgoingTransitionScope
      */
     fun onOutgoingTransition(handler: OutgoingTransitionHandler<V, I, F, A>) {
         vertexContainerBuilder.outgoingTransitionHandler = handler

@@ -16,29 +16,43 @@ import mdk.gsm.state.walker.WalkerImplementation
 import mdk.gsm.state.walker.WalkerStateImplementation
 
 /**
- * Constructs a `Walker` with a custom [ITransitionGuardState] and support for action arguments.
+ * Builds a graph based walker with a custom transition guard state and typed per-action arguments.
  *
- * This function provides a DSL-based entry point for building a walker represented by a directed graph.
- * Unlike a traverser, a walker only supports forward movement and does not maintain a history of visited states.
+ * A walker only supports forward movement and does not keep a history of visited states.
+ * Use this overload when you need to pass contextual data with actions via
+ * [GraphStateMachineAction.NextArgs] of type [A]. The value is delivered to transition guards
+ * and stored on the resulting [mdk.gsm.state.TransitionState.args].
  *
- * It allows passing custom arguments of type [A] with actions, which can be used by traversal guards to make
- * conditional decisions about edge traversal.
+ * Overload selection:
+ * - Choose this overload if you need both a custom guard state ([F]) and per-action arguments ([A]).
+ * - If you do not need per-action arguments, prefer [buildWalker] without [A].
+ * - If you also do not need a custom guard state, prefer the simplest [buildWalker] overload.
  *
- * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
- * @param I The type of the vertex identifiers.
- * @param F The traversal guard state shared across edges. Must implement [ITransitionGuardState].
- * @param A The type of arguments that can be passed with actions to influence traversal decisions.
- * @param guardState The initial state for traversal guards, shared across all edges.
- * @param coroutineScope The coroutine scope used for dispatching actions. Defaults to [GraphStateMachineScopeFactory.newScope].
- * @param dispatcherConfig Configuration for the dispatcher channel. Controls buffering and overflow behavior.
- * @param builderFunction The builder scope function for configuring the walker.
- * @return A fully configured [mdk.gsm.state.walker.Walker] instance.
- * @throws IllegalStateException If the walker is not configured correctly when attempting to build.
+ * Parameters:
+ * - [guardState]: The initial state shared by all transition guards.
+ * - [coroutineScope]: Scope used for dispatch; defaults to [GraphStateMachineScopeFactory.newScope].
+ * - [dispatcherConfig]: Controls channel capacity/overflow for action dispatching.
+ * - [builderFunction]: DSL to declare vertices, edges, and options.
  *
- * @see IVertex
- * @see ITransitionGuardState
- * @see WalkerBuilderScope
- * @see GraphStateMachineAction.NextArgs
+ * Returns: A configured [mdk.gsm.state.walker.Walker].
+ *
+ * Throws: [IllegalStateException] if the graph/start vertex is not configured.
+ *
+ * Example:
+ * ```kotlin
+ * val walker = buildWalkerWithActions<MyVertex, String, Flags, Long>(
+ *     guardState = Flags()
+ * ) {
+ *     buildGraph(startAtVertex = MyVertex.Start) {
+ *         // define vertices and edges
+ *     }
+ * }
+ * ```
+ *
+ * @param V The type of vertices (states). Must implement [IVertex].
+ * @param I The type of vertex identifiers.
+ * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param A The type of per-action arguments used with [GraphStateMachineAction.NextArgs].
  */
 fun <V, I, F, A> buildWalkerWithActions(
     guardState : F,
@@ -64,25 +78,37 @@ fun <V, I, F, A> buildWalkerWithActions(
 }
 
 /**
- * Constructs a `Walker` with a custom [ITransitionGuardState].
- * This function provides a DSL-based entry point for building a walker represented by a directed graph.
- * Unlike a traverser, a walker only supports forward movement and does not maintain a history of visited states.
+ * Builds a graph-backed walker with a custom transition guard state and no per-action arguments.
+ *
+ * A walker only supports forward movement and does not keep a history of visited states.
+ * Use this overload when you want guards backed by shared state ([F]) but you do not need to pass
+ * values with each action.
+ *
+ * Overload selection:
+ * - Choose this overload if you need custom guard state ([F]) but not per-action arguments.
+ * - If you need per-action arguments as well, prefer [buildWalkerWithActions].
+ * - If you need neither, prefer the simplest [buildWalker] overload.
+ *
+ * Example:
+ * ```kotlin
+ * val walker = buildWalker<MyVertex, String, Flags>(
+ *     guardState = Flags()
+ * ) {
+ *     buildGraph(startAtVertex = MyVertex.Start) {
+ *         // define vertices and edges
+ *     }
+ * }
+ * ```
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param F The traversal guard state shared across edges. Must implement [ITransitionGuardState].
- * @param guardState The initial state for traversal guards, shared across all edges.
+ * @param F The transition guard state shared across edges. Must implement [ITransitionGuardState].
+ * @param guardState The initial state for transition guards, shared across all edges.
  * @param coroutineScope The coroutine scope used for dispatching actions. Defaults to [GraphStateMachineScopeFactory.newScope].
  * @param dispatcherConfig Configuration for the dispatcher channel. Controls buffering and overflow behavior.
  * @param builderFunction The builder scope function for configuring the walker.
  * @return A fully configured [Walker] instance.
  * @throws IllegalStateException If the walker is not configured correctly when attempting to build.
- *
- * @see IVertex
- * @see ITransitionGuardState
- * @see WalkerBuilderScope
- * @see buildWalker For building without custom traversal guard state.
- * @see buildWalkerWithActions For building with custom action argument types.
  */
 @GsmBuilderScope
 fun <V, I, F> buildWalker(
@@ -111,9 +137,25 @@ fun <V, I, F> buildWalker(
 }
 
 /**
- * This is the simplest way to create a walker when you don't need custom traversal guard state
- * or specialized action argument types.
- * Unlike a traverser, a walker only supports forward movement and does not maintain a history of visited states.
+ * Builds a walker without custom guard state and without per-action arguments (the simplest overload).
+ *
+ * A walker supports forward-only movement and does not keep a history of visited states. Use this when your
+ * transitions depend solely on the graph structure. A no-op guard state is used internally and the action
+ * argument type is [Nothing].
+ *
+ * Overload selection:
+ * - Choose this overload if you need neither custom guard state nor per-action arguments.
+ * - If you need guard state, prefer [buildWalker] with [F].
+ * - If you also need per-action arguments, prefer [buildWalkerWithActions].
+ *
+ * Example:
+ * ```kotlin
+ * val walker = buildWalker<MyVertex, String> {
+ *     buildGraph(startAtVertex = MyVertex.Start) {
+ *         // define vertices and edges
+ *     }
+ * }
+ * ```
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
@@ -122,11 +164,6 @@ fun <V, I, F> buildWalker(
  * @param builderFunction The builder scope function for configuring the walker.
  * @return A fully configured [Walker] instance.
  * @throws IllegalStateException If the walker is not configured correctly when attempting to build.
- *
- * @see IVertex
- * @see WalkerBuilderScope
- * @see buildWalker For building with custom traversal guard state.
- * @see buildWalkerWithActions For building with custom action argument types.
  */
 @GsmBuilderScope
 fun <V, I> buildWalker(
@@ -177,10 +214,19 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
 ) where V : IVertex<I>, F : ITransitionGuardState {
 
     /**
-     * Allows simply setting the graph for cases where one is already created.
+     * Assigns an already-built [Graph] and sets the start vertex for the walker.
      *
-     * @param startAtVertex The vertex to start at. Must be a vertex in the graph.
-     * @param graph The graph to set.
+     * Use this when you have constructed a graph separately (e.g., via [buildGraphOnly]) and
+     * want to reuse it. The [startAtVertex] should exist in the provided [graph].
+     *
+     * Example:
+     * ```kotlin
+     * val graph = buildGraphOnly<MyVertex, String, Flags, Nothing> { /* ... */ }
+     * setWorkflowGraph(startAtVertex = MyVertex.Start, graph = graph)
+     * ```
+     *
+     * @param startAtVertex The start vertex. Must exist in [graph].
+     * @param graph The graph to assign to this walker.
      */
     fun setWorkflowGraph(startAtVertex : V, graph: Graph<V, I, F, A>) {
         graphStateMachineBuilder.graph = graph
@@ -188,10 +234,22 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
     }
 
     /**
-     * Build a graph using the provided scope receiver.
+     * Builds and assigns a graph for the walker using the provided DSL.
      *
-     * @param startAtVertex The vertex to start at. Must be a vertex in the graph when built.
-     * @param scopeConsumer The scope consumer to build the graph.
+     * This creates an internal [GraphBuilder] and invokes [scopeConsumer] with a [GraphBuilderScope]
+     * to declare vertices and edges. The resulting graph is validated (no duplicate vertex ids and
+     * no dangling edges) and set on the builder, and [startAtVertex] becomes the start vertex.
+     *
+     * Example:
+     * ```kotlin
+     * buildGraph(startAtVertex = MyVertex.Start) {
+     *     addVertex(MyVertex.Start) { addEdge { setTo(MyVertex.Next) } }
+     *     addVertex(MyVertex.Next)
+     * }
+     * ```
+     *
+     * @param startAtVertex The vertex to start at. Must exist in the graph after building.
+     * @param scopeConsumer A DSL that configures the graph via [GraphBuilderScope].
      */
     fun buildGraph(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, I, F, A>.() -> Unit) {
         val graphGraphBuilder = GraphBuilder<V, I, F, A>()
@@ -202,7 +260,10 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
     }
 
     /**
-     * Shorthand for [buildGraph]
+     * Shorthand to build and assign a graph with the same semantics as [buildGraph].
+     *
+     * Accepts the same parameters and builds the graph using a [GraphBuilderScope], then sets
+     * [startAtVertex] as the start vertex.
      */
     fun g(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, I, F, A>.() -> Unit) {
         buildGraph(startAtVertex, scopeConsumer)
@@ -230,7 +291,7 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
      * The default is `false`, in which case traversal behaviour is not impacted and the concept of traversal bounds can be ignored.
      * This can be safely ignored unless the implementer requires distinct states representing nowhere else to go via [TransitionBounds] that need to be traversed over.
      *
-              * Being out-of-bounds (having nowhere else to go) for the walker (as flagged by the [mdk.gsm.state.TransitionBounds] property of [mdk.gsm.state.TransitionState])
+     * Being out-of-bounds (having nowhere else to go) for the walker (as flagged by the [mdk.gsm.state.TransitionBounds] property of [mdk.gsm.state.TransitionState])
      * is basically a null state, but with the benefit of knowing the last vertex, and the direction the state was moved in.
      *
      * The current state of the walker is always non-null, but when out of bounds, and [setExplicitTransitionIntoBounds] is `true`,
@@ -247,7 +308,7 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
      * This can be useful to demarcate a process being "uninitialized" or "finished" for example, such as in the case of a completed workflow (workflows are typically a directed acyclic graph with a definitive 'ending') for instance,
      * allowing callers to respond to the workflow being finished.
      *
-     * @param setExplicitTransitionIntoBounds `true` to enable automatic transitions back into a valid state on the same vertex when
+     * @param explicitlyTransitionIntoBounds `true` to enable automatic transitions back into a valid state on the same vertex when
      *        out of bounds, `false` to keep the walker at the out-of-bounds state (default).
      */
     fun setExplicitTransitionIntoBounds(explicitlyTransitionIntoBounds : Boolean) {

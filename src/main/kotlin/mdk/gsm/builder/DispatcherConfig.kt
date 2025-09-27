@@ -13,7 +13,7 @@ import mdk.gsm.state.GraphStateMachineAction
  * which affects how actions are buffered and processed.
  *
  * The properties of the class are used to create a regular coroutines channel.
- * For more information onf their significance see resources on `Channel` in the Kotlin coroutines library.
+ * For more information on their significance, see resources on `Channel` in the Kotlin coroutines library.
  *
  * @param A The type of action arguments that can be passed when dispatching actions.
  * @property capacity Controls the buffering behavior of the channel:

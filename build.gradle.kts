@@ -112,7 +112,7 @@ val gsmUserAndPassword : GsmUserAndPassword by lazy {
 }
 
 object Props {
-    const val VERSION = "1.0.0.Beta4"
+    const val VERSION = "1.0.0-beta6"
 }
 
 plugins {

@@ -7,21 +7,7 @@ import mdk.gsm.graph.IVertex
  * Provides context and control capabilities to vertex pre-visit handlers.
  *
  * This scope is automatically created and passed to a [BeforeVisitHandler] function when the state machine
- * is about to traversal to a vertex. It provides access to:
- *
- * 1. The vertex that is about to be visited
- * 2. The shared traversal guard state
- * 3. Any arguments passed with the current action
- *
- * Additionally, it provides control over the traversal process through the [autoAdvance] method,
- * which allows the handler to mark the vertex as an intermediate state that should not be published
- * as the current state of the state machine.
- *
- * Common use cases for BeforeVisitScope include:
- * - Performing setup operations before a vertex becomes the current state
- * - Validating preconditions for entering a state
- * - Implementing intermediate vertices that perform operations but aren't exposed to observers
- * - Creating automatic transitions through certain vertices based on runtime conditions
+ * is about to traverse to a vertex. It provides access to:
  *
  * @property vertex The vertex that is about to be visited (become the current state).
  * @property guardState The shared traversal guard state for the entire state machine.
@@ -45,12 +31,14 @@ class BeforeVisitScope<V, I, F, A>(
     internal var autoAdvanceTrigger = false
 
     /**
-     * Signals that the state machine should automatically advance to the next state
+     * Calling this function signals that the vertex state about to be visited should be skipped
      * without publishing this vertex as the current state.
      *
      * When called, the handler's vertex becomes an 'intermediate state'.
-     * Intermediate states are 'in-between' states that are not published,
-     * functioning as 'effects' that are explicitly represented in the state machine but never perceived by observers.
+     *
+     * The subsequent state in the state graph will be adopted as the current state instead.
+     * Intermediate states are 'in-between' states that function as 'effects' that are explicitly represented in the state machine.
+     * They are never observed as state.
      *
      * Note: Intermediate states are skipped over during previous actions.
      *
@@ -62,10 +50,8 @@ class BeforeVisitScope<V, I, F, A>(
 }
 
 /**
- * This handler can be associated with a specific vertex during graph construction.
- * It is function that executes custom logic immediately before a vertex is visited in the graph traversal.
  *
- * The handler is invoked when the state machine is about to traversal to a new vertex, but before
+ * The handler is invoked when the state machine is about to traverse to a new vertex, but before
  * that vertex is published as the current state. It receives a [BeforeVisitScope] as its receiver,
  * providing access to the vertex being visited, the shared traversal guard state, and any arguments
  * passed with the current action.

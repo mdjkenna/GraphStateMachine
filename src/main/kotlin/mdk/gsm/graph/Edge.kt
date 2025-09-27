@@ -10,7 +10,7 @@ import mdk.gsm.state.TransitionGuardScope
  *
  * Edges are defined as outgoing from a vertex, and outgoing edges are traversed according to their [order] value,
  * used to prioritize transitions when multiple edges originate from the same vertex.
- * A vertices edges are traversed based on [order] ascending.
+ * A vertex's edges are traversed in ascending order of [order].
  *
  * The [transitionGuard] acts as a dynamic runtime condition. If the [TransitionGuard] function returns `true`, the traversal is allowed;
  * otherwise, it's blocked. If no [transitionGuard] has been set then traversal will not be blocked.
