@@ -43,8 +43,8 @@ jobs:
           GSM_USER: ${{ secrets.GSM_USER }}
           GSM_PASSWORD: ${{ secrets.GSM_PASSWORD }}
 
-      - name: Build and Publish
-        run: ./gradlew publish --info --stacktrace
+      - name: Build and Publish to Central
+        run: ./gradlew publishToCentral --info --stacktrace
         env:
           GSM_USER: ${{ secrets.GSM_USER }}
           GSM_PASSWORD: ${{ secrets.GSM_PASSWORD }}
