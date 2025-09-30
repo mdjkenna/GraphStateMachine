@@ -193,7 +193,7 @@ fun <V, I> buildWalker(
  *
  * This class provides a DSL (Domain Specific Language) for configuring a walker.
  * It exposes methods for setting up the graph, defining the start vertex, and other walker properties.
- * Unlike [TraverserBuilderScope], it does not expose methods for configuring traversal behavior,
+ * Unlike [TraverserBuilderScope], it does not expose methods for configuring the edge exploration strategy,
  * as walkers only support forward movement.
  *
  * Instances of this class are created by the [buildWalker] and [buildWalkerWithActions]
@@ -270,8 +270,8 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
     }
 
     /**
-     * Sets the traversal guard state for the entire walker.
-     * Can be ignored if not building a walker with traversal guards, however, must not be null if specified as a type parameter.
+     * Sets the transition guard state for the entire walker.
+     * Can be ignored if not building a walker with transition guards; however, it must not be null if specified as a type parameter.
      */
     fun setTraversalGuardState(guardState: F) {
         graphStateMachineBuilder.transitionGuardState = guardState
@@ -288,25 +288,20 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
     }
 
     /**
-     * The default is `false`, in which case traversal behaviour is not impacted and the concept of traversal bounds can be ignored.
-     * This can be safely ignored unless the implementer requires distinct states representing nowhere else to go via [TransitionBounds] that need to be traversed over.
+     * The default is `false`, in which case transition behavior is not impacted and the concept of transition bounds can be ignored.
+     * This can be safely ignored unless your use case requires treating “nowhere else to go” as a distinct state via [TransitionBounds].
      *
-     * Being out-of-bounds (having nowhere else to go) for the walker (as flagged by the [mdk.gsm.state.TransitionBounds] property of [mdk.gsm.state.TransitionState])
-     * is basically a null state, but with the benefit of knowing the last vertex, and the direction the state was moved in.
+     * Being out of bounds (no valid outgoing transition) for the walker — indicated by the
+     * [mdk.gsm.state.TransitionBounds] property on [mdk.gsm.state.TransitionState] — can be viewed as a
+     * null-like condition, but with awareness of the last vertex and the direction of movement.
      *
-     * The current state of the walker is always non-null, but when out of bounds, and [setExplicitTransitionIntoBounds] is `true`,
-     * this could arguably be considered a kind of null object representation depending on how you want to interpret it via your use case.
+     * If [setExplicitTransitionIntoBounds] is `true`, the walker will treat moving back into bounds as a
+     * standalone distinct transition, yielding an in-bounds transition state on the same vertex upon the next
+     * dispatched action. In other words, the [mdk.gsm.state.TransitionBounds] changes to
+     * [mdk.gsm.state.TransitionBounds.WithinBounds] while the vertex remains the same.
      *
-     * Callers can choose to ignore the [mdk.gsm.state.TransitionBounds] and forget about this mechanism, or treat being out of bounds as a distinct state.
-     *
-     * If [setExplicitTransitionIntoBounds] is `true`, the walker will treat moving back into bounds as a standalone distinct traversal, moving to a
-     * valid in-bounds state (*on the same vertex*) upon the next dispatched action.
-     *
-     * This means the [GsmController] will stay on the same vertex, but simply move into a traversal state which is in-bounds i.e.
-     * only the [mdk.gsm.state.TransitionBounds] property will be updated as being back into bounds: ([mdk.gsm.state.TransitionBounds.WithinBounds]).
-     *
-     * This can be useful to demarcate a process being "uninitialized" or "finished" for example, such as in the case of a completed workflow (workflows are typically a directed acyclic graph with a definitive 'ending') for instance,
-     * allowing callers to respond to the workflow being finished.
+     * This can be useful to demarcate a process as “uninitialized” or “finished” (for example, in a DAG workflow with a
+     * definitive end), allowing callers to react when the workflow completes.
      *
      * @param explicitlyTransitionIntoBounds `true` to enable automatic transitions back into a valid state on the same vertex when
      *        out of bounds, `false` to keep the walker at the out-of-bounds state (default).
@@ -316,9 +311,6 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
     }
 }
 
-/**
- * Extension function for [GraphStateMachineBuilder] to build a GsmController with a stateless graph walk.
- */
 @PublishedApi
 internal fun <V, I, F, A> GraphStateMachineBuilder<V, I, F, A>.buildForWalker(): GsmController<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
     useStatelessWalk = true

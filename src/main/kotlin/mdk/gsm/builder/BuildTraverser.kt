@@ -10,7 +10,10 @@ import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.scope.GraphStateMachineScopeFactory
-import mdk.gsm.state.*
+import mdk.gsm.state.GraphStateMachineAction
+import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.NoTransitionGuardState
+import mdk.gsm.state.TransitionBounds
 import mdk.gsm.state.traverser.Traverser
 import mdk.gsm.state.traverser.TraverserDispatcherImplementation
 import mdk.gsm.state.traverser.TraverserImplementation
@@ -274,7 +277,7 @@ class TraverserBuilderScope<V, I, F, A> @PublishedApi internal constructor(
     }
 
     /**
-     * Sets the traversal type for the traverser
+     * Sets the edge exploration strategy for the traverser.
      *
      * @see EdgeTraversalType
      */
@@ -283,8 +286,8 @@ class TraverserBuilderScope<V, I, F, A> @PublishedApi internal constructor(
     }
 
     /**
-     * Sets the traversal guard state for the entire traverser.
-     * Can be ignored if not building a traverser with traversal guards, however, must not be null if specified as a type parameter.
+     * Sets the transition guard state for the entire traverser.
+     * Can be ignored if not building a traverser with transition guards; however, it must not be null if specified as a type parameter.
      */
     fun setTransitionGuardState(guardState: F) {
         graphStateMachineBuilder.transitionGuardState = guardState
@@ -302,25 +305,20 @@ class TraverserBuilderScope<V, I, F, A> @PublishedApi internal constructor(
 
 
     /**
-     * The default is `false`, in which case traversal behaviour is not impacted and the concept of traversal bounds can be ignored.
-     * This can be safely ignored unless the implementer requires distinct states representing nowhere else to go via [TransitionBounds] that need to be traversed over.
+     * The default is `false`, in which case transition behavior is not impacted and the concept of transition bounds can be ignored.
+     * This can be safely ignored unless your use case requires treating “nowhere else to go” as a distinct state via [TransitionBounds].
      *
-     * Being out-of-bounds (having nowhere else to go) for the traverser (as flagged by the [mdk.gsm.state.TransitionBounds] property of [mdk.gsm.state.TransitionState])
-     * is basically a null state, but with the benefit of knowing the last vertex, and the direction the state was moved in.
+     * Being out of bounds (no valid outgoing transition) for the traverser — indicated by the
+     * [mdk.gsm.state.TransitionBounds] property on [mdk.gsm.state.TransitionState] — can be viewed as a
+     * null-like condition, but with awareness of the last vertex and the direction of movement.
      *
-     * The current state of the traverser is always non-null, but when out of bounds, and [setExplicitTransitionIntoBounds] is `true`,
-     * this could arguably be considered a kind of null object representation depending on how you want to interpret it via your use case.
+     * If [setExplicitTransitionIntoBounds] is `true`, the traverser will treat moving back into bounds as a
+     * standalone distinct transition, yielding an in-bounds transition state on the same vertex upon the next
+     * dispatched action. In other words, the [mdk.gsm.state.TransitionBounds] changes to
+     * [mdk.gsm.state.TransitionBounds.WithinBounds] while the vertex remains the same.
      *
-     * Callers can choose to ignore the [mdk.gsm.state.TransitionBounds] and forget about this mechanism, or treat being out of bounds as a distinct state.
-     *
-     * If [setExplicitTransitionIntoBounds] is `true`, the traverser will treat moving back into bounds as a standalone distinct traversal, moving to a
-     * valid in-bounds state (*on the same vertex*) upon the next dispatched action.
-     *
-     * This means the [GsmController] will stay on the same vertex, but simply move into a traversal state which is in-bounds i.e.
-     * only the [mdk.gsm.state.TransitionBounds] property will be updated as being back into bounds: ([mdk.gsm.state.TransitionBounds.WithinBounds]).
-     *
-     * This can be useful to demarcate a process being "uninitialized" or "finished" for example, such as in the case of a completed workflow (workflows are typically a directed acyclic graph with a definitive 'ending') for instance,
-     * allowing callers to respond to the workflow being finished.
+     * This can be useful to demarcate a process as “uninitialized” or “finished” (for example, in a DAG workflow with a
+     * definitive end), allowing callers to react when the workflow completes.
      *
      * @param explicitlyTransitionIntoBounds `true` to enable automatic transitions back into a valid state on the same vertex when
      *        out of bounds, `false` to keep the traverser at the out-of-bounds state (default).

@@ -1,11 +1,11 @@
-[![Build](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/buildAndTest.yml/badge.svg)](https://github.com/mdjkenna/GraphStateMachine/actions/workflows/buildAndTest.yml)
-[![codecov](https://codecov.io/gh/mdjkenna/GraphStateMachine/branch/master/graph/badge.svg)](https://codecov.io/gh/mdjkenna/GraphStateMachine)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.mdjkenna/graph-state-machine.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.mdjkenna/graph-state-machine)
-![GitHub](https://img.shields.io/github/license/mdjkenna/GraphStateMachine)
-![GitHub last commit](https://img.shields.io/github/last-commit/mdjkenna/GraphStateMachine)
-[![GitHub top language](https://img.shields.io/github/languages/top/mdjkenna/GraphStateMachine.svg)](https://github.com/mdjkenna/GraphStateMachine)
+[![Build](https://github.com/mdjkenna/GraphStateMachines/actions/workflows/buildAndTest.yml/badge.svg)](https://github.com/mdjkenna/GraphStateMachines/actions/workflows/buildAndTest.yml)
+[![codecov](https://codecov.io/gh/mdjkenna/GraphStateMachines/branch/master/graph/badge.svg)](https://codecov.io/gh/mdjkenna/GraphStateMachines)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.mdjkenna/graph-state-machines.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.mdjkenna/graph-state-machines)
+![GitHub](https://img.shields.io/github/license/mdjkenna/GraphStateMachines)
+![GitHub last commit](https://img.shields.io/github/last-commit/mdjkenna/GraphStateMachines)
+[![GitHub top language](https://img.shields.io/github/languages/top/mdjkenna/GraphStateMachines.svg)](https://github.com/mdjkenna/GraphStateMachines)
 
-# GraphStateMachine
+# GraphStateMachines
 
 This is a Kotlin library for creating state machines designed by building a directed graph of states and their transitions.
 State machine behaviour is defined by specifying possible states and transitions in a Kotlin domain-specific-language (DSL) style builder.
@@ -44,7 +44,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.mdjkenna:graph-state-machine:<version>")
+    implementation("io.github.mdjkenna:graph-state-machines:<version>")
 }
 ```
 
@@ -61,7 +61,7 @@ The following 8 vertex directed acyclic graph can be represented easily in the g
 _The above graph image was made using a dot language representation of the 8 vertex DAG in the example below and inputting this into GraphViz. 
 Further customisation is available for these diagrams - discussed more in the last section._ 
 
-GraphStateMachine provides a DSL for defining vertices (states) and edges (transitions) of your state machine graph. 
+GraphStateMachines provides a DSL for defining vertices (states) and edges (transitions) of your state machine graph. 
 Vertices must implement the `IVertex<I>` interface, and edges define the allowed transitions between states.
 Edges are traversed in the order they're added unless specified otherwise with an `order` parameter.
 

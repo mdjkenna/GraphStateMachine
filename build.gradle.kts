@@ -112,7 +112,7 @@ val gsmUserAndPassword : GsmUserAndPassword by lazy {
 }
 
 object Props {
-    const val VERSION = "1.0.0-beta6"
+    const val VERSION = "1.0.0-beta1"
 }
 
 plugins {
@@ -183,15 +183,15 @@ tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifactId = "graph-state-machine"
+            artifactId = "graph-state-machines"
             version = Props.VERSION
 
             from(components["java"])
 
             pom {
-                name.set("GraphStateMachine")
+                name.set("GraphStateMachines")
                 description.set("A Kotlin library for creating graph based state machines")
-                url.set("https://github.com/mdjkenna/GraphStateMachine")
+                url.set("https://github.com/mdjkenna/GraphStateMachines")
 
                 licenses {
                     license {
@@ -209,9 +209,9 @@ publishing {
                 }
 
                 scm {
-                    connection.set("scm:git:git://github.com/mdjkenna/GraphStateMachine.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/mdjkenna/GraphStateMachine.git")
-                    url.set("https://github.com/mdjkenna/GraphStateMachine")
+                    connection.set("scm:git:git://github.com/mdjkenna/GraphStateMachines.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/mdjkenna/GraphStateMachines.git")
+                    url.set("https://github.com/mdjkenna/GraphStateMachines")
                 }
             }
         }
