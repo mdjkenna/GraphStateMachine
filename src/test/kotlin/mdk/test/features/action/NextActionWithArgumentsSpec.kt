@@ -2,17 +2,20 @@ package mdk.test.features.action
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import mdk.gsm.builder.buildTraverserWithActions
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.traverser.Traverser
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.AssertionUtils
 import mdk.test.utils.TestTransitionGuardState
-import mdk.test.utils.TestVertex
 
 class NextActionWithArgumentsSpec : BehaviorSpec(
     body = {
         Given("A graph state machine with a vertex that accepts arguments in the Next action") {
-            val traverser = buildGraph()
+            val guardState = TestTransitionGuardState()
+            val traverser = GraphScenarios.nextActionWithArgsTraverser(
+                guardState = guardState,
+                argsGoTo3 = TestArgs(TestArgs.ARGS_GO_TO_3),
+                argsGoTo4 = TestArgs(TestArgs.ARGS_GO_TO_4)
+            )
 
             When("The Next action is dispatched without an argument type") {
 
@@ -157,66 +160,5 @@ data class TestArgs(val id: Int) {
     companion object {
         const val ARGS_GO_TO_3 = 3
         const val ARGS_GO_TO_4 = 4
-    }
-}
-
-private fun buildGraph() : Traverser<TestVertex, String, TestTransitionGuardState, TestArgs> {
-
-    return buildTraverserWithActions(guardState = TestTransitionGuardState()) {
-        val v1 = TestVertex("1")
-        val v2 = TestVertex("2")
-        val v3 = TestVertex("3")
-        val v4 = TestVertex("4")
-        val v5 = TestVertex("5")
-        val v6 = TestVertex("6")
-
-        setExplicitTransitionIntoBounds(true)
-
-        buildGraph(startAtVertex = v1) {
-            addVertex(v1) {
-                addEdge {
-                    setTo(v2)
-                }
-            }
-
-            addVertex(v2) {
-                addEdge {
-                    setTo(v3)
-                    setEdgeTransitionGuard {
-                        args != null && args.id == TestArgs.ARGS_GO_TO_3
-                    }
-                }
-
-                addEdge {
-                    setTo(v4)
-                    setEdgeTransitionGuard {
-                        args != null && args.id == TestArgs.ARGS_GO_TO_4
-                    }
-                }
-            }
-
-
-            addVertex(v4) {
-                onBeforeVisit {
-                    if (args != null && args.id == TestArgs.ARGS_GO_TO_4) {
-                        autoAdvance()
-                    }
-                }
-
-                addEdge {
-                    setTo(v5)
-                }
-            }
-
-            addVertex(v3) {
-                addEdge {
-                    setTo(v6)
-                }
-            }
-
-            addVertex(v5)
-            addVertex(v6)
-        }
-
     }
 }

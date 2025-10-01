@@ -5,9 +5,9 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import mdk.gsm.builder.buildWalker
 import mdk.gsm.builder.buildWalkerWithActions
 import mdk.gsm.state.GraphStateMachineAction
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.TestTransitionGuardState
 import mdk.test.utils.TestVertex
 
@@ -15,26 +15,14 @@ class WalkerDispatchMethodsSpec : BehaviorSpec({
     
     Given("A walker for testing all dispatch method overloads") {
         val guardState = TestTransitionGuardState()
-        val walker = buildWalker(guardState) {
-            val v1 = TestVertex("1")
-            val v2 = TestVertex("2")
-            val v3 = TestVertex("3")
-            
-            buildGraph(v1) {
-                addVertex(v1) { addEdge { setTo(v2) } }
-                addVertex(v2) { addEdge { setTo(v3) } }
-                addVertex(v3)
-            }
-        }
+        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
         
         When("launchDispatch(Next) is called for fire-and-forget execution") {
             walker.launchDispatch(GraphStateMachineAction.Next)
             
             Then("The action eventually processes without blocking the caller") {
                 runBlocking {
-                    // Use withTimeout to prevent infinite wait if it hangs
                     withTimeout(1000) {
-                        // Poll until state changes or timeout
                         var attempts = 0
                         while (walker.current.value.vertex.id == "1" && attempts < 50) {
                             delay(20)
@@ -66,7 +54,6 @@ class WalkerDispatchMethodsSpec : BehaviorSpec({
         When("suspend dispatch(Next) is called without awaiting result") {
             runBlocking {
                 walker.dispatch(GraphStateMachineAction.Next)
-                // Give it time to process
                 delay(100)
             }
             
@@ -153,52 +140,36 @@ class WalkerDispatchMethodsSpec : BehaviorSpec({
     
     Given("A walker for testing component destructuring operators") {
         val guardState = TestTransitionGuardState()
-        val walker = buildWalker(guardState) {
-            val v1 = TestVertex("start")
-            val v2 = TestVertex("middle")
-            val v3 = TestVertex("end")
-            
-            buildGraph(v1) {
-                addVertex(v1) { addEdge { setTo(v2) } }
-                addVertex(v2) { addEdge { setTo(v3) } }
-                addVertex(v3)
-            }
-        }
+        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
         
         When("The walker is destructured using component1() and component2()") {
             val (state, dispatcher) = walker
             
             Then("component1() returns the WalkerState") {
-                state.current.value.vertex.id shouldBe "start"
+                state.current.value.vertex.id shouldBe "1"
             }
             
             Then("component2() returns the WalkerDispatcher") {
                 runBlocking {
                     dispatcher.dispatchAndAwaitResult(GraphStateMachineAction.Next)
                 }
-                state.current.value.vertex.id shouldBe "middle"
+                state.current.value.vertex.id shouldBe "2"
             }
             
             Then("State reflects changes made through dispatcher") {
                 runBlocking {
                     dispatcher.dispatchAndAwaitResult(GraphStateMachineAction.Next)
                 }
-                state.current.value.vertex.id shouldBe "end"
+                state.current.value.vertex.id shouldBe "3"
             }
         }
     }
     
     Given("A walker for testing walkerState and walkerDispatcher properties") {
         val guardState = TestTransitionGuardState()
-        val walker = buildWalker(guardState) {
-            val v1 = TestVertex("1")
-            val v2 = TestVertex("2")
-            
-            buildGraph(v1) {
-                addVertex(v1) { addEdge { setTo(v2) } }
-                addVertex(v2)
-            }
-        }
+        val v1 = TestVertex("1")
+        val v2 = TestVertex("2")
+        val walker = GraphScenarios.conditionalWithArgsWalker<Nothing>(guardState, { true }, v1, v2)
         
         When("Accessing walkerState property") {
             val state = walker.walkerState

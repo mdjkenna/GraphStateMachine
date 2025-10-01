@@ -2,13 +2,11 @@ package mdk.test.features.transition.traverse
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.datatest.withData
-import mdk.gsm.builder.buildTraverser
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.traverser.Traverser
-import mdk.gsm.util.StringVertex
 import mdk.test.utils.AssertionUtils
 import mdk.test.utils.AssertionUtils.assertTracedPathWithCurrentState
 import mdk.test.utils.TestBuilderUtils
@@ -163,69 +161,10 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
         }
 
         private fun createParam1(title: String, edgeTraversalType: EdgeTraversalType): TestParameters {
-            val traverser = buildTraverser(
-                TestTransitionGuardState()
-            ) {
-                val step1 = StringVertex("1")
-                setTraversalType(edgeTraversalType)
-
-                buildGraph(step1) {
-                    val step2a = StringVertex("2A")
-                    val step2b = StringVertex("2B")
-                    val step3a = StringVertex("3A")
-                    val step3b = StringVertex("3B")
-                    val step3c = StringVertex("3C")
-                    val step4a = StringVertex("4A")
-                    val step4b = StringVertex("4B")
-                    val step5 = StringVertex("5")
-                    val step6 = StringVertex("6")
-                    val step7 = StringVertex("7")
-
-                    addVertex(step1) {
-                        addEdge { setTo(step2a) }
-                        addEdge { setTo(step2b) }
-                    }
-
-                    addVertex(step2a) {
-                        addEdge { setTo(step3a) }
-                        addEdge { setTo(step3b) }
-                    }
-
-                    addVertex(step2b) {
-                        addEdge { setTo(step3c) }
-                    }
-
-                    addVertex(step3a) {
-                        addEdge { setTo(step4a) }
-                    }
-
-                    addVertex(step3b) {
-                        addEdge { setTo(step4b) }
-                    }
-
-                    addVertex(step3c) {
-                        addEdge { setTo(step4b) }
-                    }
-
-                    addVertex(step4a) {
-                        addEdge { setTo(step5) }
-                    }
-
-                    addVertex(step4b) {
-                        addEdge { setTo(step6) }
-                    }
-
-                    addVertex(step5) {
-                        addEdge { setTo(step7) }
-                    }
-
-                    addVertex(step6) {
-                        addEdge { setTo(step7) }
-                    }
-
-                    addVertex(step7) {}
-                }
-            }
+            val traverser = mdk.test.scenarios.GraphScenarios.elevenVertexDAGTraverser(
+                TestTransitionGuardState(),
+                edgeTraversalType
+            )
 
             return TestParameters(
                 title,

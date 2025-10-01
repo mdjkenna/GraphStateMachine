@@ -8,6 +8,7 @@ import mdk.gsm.builder.buildWalker
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.utils.TestVertex
 
+// Note: This test file tests the builder DSL methods themselves, so inline graph building is required
 class BuilderScopeMethodsSpec : BehaviorSpec({
     
     Given("A graph builder using various edge configuration methods") {
@@ -168,7 +169,6 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         
         When("Edges have transition guards with state checks") {
             var allowPath1 = true
-            
             val traverser = buildTraverser<TestVertex, String> {
                 val start = TestVertex("start")
                 val path1 = TestVertex("path1")
@@ -261,7 +261,6 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         
         When("Building vertices with onBeforeVisit callbacks") {
             val visitedVertices = mutableListOf<String>()
-            
             val walker = buildWalker {
                 val v1 = TestVertex("1")
                 val v2 = TestVertex("2")
@@ -307,7 +306,6 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         
         When("Building vertices with onOutgoingTransition callbacks") {
             val transitionLog = mutableListOf<String>()
-            
             val traverser = buildTraverser {
                 val v1 = TestVertex("1")
                 val v2 = TestVertex("2")

@@ -3,35 +3,15 @@ package mdk.test.features.action
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import mdk.gsm.builder.buildWalker
-import mdk.gsm.builder.buildWalkerWithActions
 import mdk.gsm.state.GraphStateMachineAction
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.TestTransitionGuardState
-import mdk.test.utils.TestVertex
 
 class WalkerAsyncDispatchSpec : BehaviorSpec({
     
-    Given("A walker with multiple vertices for testing dispatch operations") {
+    Given("A 4-vertex linear walker for testing dispatch operations") {
         val guardState = TestTransitionGuardState()
-        val walker = buildWalker(guardState) {
-            val v1 = TestVertex("1")
-            val v2 = TestVertex("2")
-            val v3 = TestVertex("3")
-            val v4 = TestVertex("4")
-            
-            buildGraph(v1) {
-                addVertex(v1) {
-                    addEdge { setTo(v2) }
-                }
-                addVertex(v2) {
-                    addEdge { setTo(v3) }
-                }
-                addVertex(v3) {
-                    addEdge { setTo(v4) }
-                }
-                addVertex(v4)
-            }
-        }
+        val walker = GraphScenarios.linearFourVertexTraverser(guardState)
         
         When("dispatchAndAwaitResult is called with a Next action") {
             runBlocking {
@@ -77,12 +57,13 @@ class WalkerAsyncDispatchSpec : BehaviorSpec({
     }
     
     Given("A walker with action arguments for testing NextArgs dispatch") {
+        // Inline since this is a specialized arg-based graph
         val guardState = TestTransitionGuardState()
-        val walker = buildWalkerWithActions<TestVertex, String, TestTransitionGuardState, Int>(guardState) {
-            val v1 = TestVertex("1")
-            val v2 = TestVertex("2")
-            val v3 = TestVertex("3")
-            val v4 = TestVertex("4")
+        val walker = mdk.gsm.builder.buildWalkerWithActions<mdk.test.utils.TestVertex, String, TestTransitionGuardState, Int>(guardState) {
+            val v1 = mdk.test.utils.TestVertex("1")
+            val v2 = mdk.test.utils.TestVertex("2")
+            val v3 = mdk.test.utils.TestVertex("3")
+            val v4 = mdk.test.utils.TestVertex("4")
             
             buildGraph(v1) {
                 addVertex(v1) {
@@ -138,17 +119,11 @@ class WalkerAsyncDispatchSpec : BehaviorSpec({
         }
     }
     
-    Given("A walker for testing component destructuring") {
+    Given("A simple walker for testing component destructuring") {
         val guardState = TestTransitionGuardState()
-        val walker = buildWalker(guardState) {
-            val v1 = TestVertex("start")
-            val v2 = TestVertex("end")
-            
-            buildGraph(v1) {
-                addVertex(v1) { addEdge { setTo(v2) } }
-                addVertex(v2)
-            }
-        }
+        val start = mdk.test.utils.TestVertex("start")
+        val end = mdk.test.utils.TestVertex("end")
+        val walker = GraphScenarios.conditionalWithArgsWalker<Nothing>(guardState, { true }, start, end)
         
         When("The walker is destructured into state and dispatcher components") {
             val (state, dispatcher) = walker
@@ -185,17 +160,9 @@ class WalkerAsyncDispatchSpec : BehaviorSpec({
         }
     }
     
-    Given("A walker for testing tearDown functionality") {
+    Given("A simple walker for testing tearDown functionality") {
         val guardState = TestTransitionGuardState()
-        val walker = buildWalker(guardState) {
-            val v1 = TestVertex("1")
-            val v2 = TestVertex("2")
-            
-            buildGraph(v1) {
-                addVertex(v1) { addEdge { setTo(v2) } }
-                addVertex(v2)
-            }
-        }
+        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
         
         When("The walker is used normally") {
             runBlocking {

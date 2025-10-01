@@ -12,6 +12,7 @@ import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.utils.TestTransitionGuardState
 import mdk.test.utils.TestVertex
 
+// Note: This test file tests dispatcher configuration, so inline graph building is required
 class DispatcherConfigSpec : BehaviorSpec({
     
     Given("A traverser with default dispatcher configuration") {
@@ -51,7 +52,6 @@ class DispatcherConfigSpec : BehaviorSpec({
                 droppedActions.add(action)
             }
         )
-        
         val guardState = TestTransitionGuardState()
         val traverser = buildTraverserWithActions(
             guardState = guardState,

@@ -1,4 +1,3 @@
-package mdk.test.features.builder
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -7,19 +6,19 @@ import mdk.gsm.builder.buildWalker
 import mdk.gsm.util.IntVertex
 import mdk.test.utils.TestVertex
 
+// Note: This test file tests walker builder validation, so inline graph building is required
 class WalkerBuildValidationSpec : BehaviorSpec({
 
     Given("A walker builder") {
 
         When("Building a graph with missing vertices causing dangling edges") {
-            Then("The build should fail with an appropriate error") {
+            Then("The build should fail with a dangling edge error") {
                 shouldThrow<IllegalStateException> {
                     buildWalker {
                         buildGraph(TestVertex("1")) {
                             addVertex(TestVertex("1")) {
                                 addEdge {
                                     setTo(TestVertex("2"))
-                                    setTo("2")
                                 }
                             }
                         }

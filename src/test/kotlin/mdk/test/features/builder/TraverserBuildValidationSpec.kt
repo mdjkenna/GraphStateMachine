@@ -7,6 +7,7 @@ import mdk.gsm.builder.buildTraverser
 import mdk.gsm.util.IntVertex
 import mdk.test.utils.TestVertex
 
+// Note: This test file tests builder validation, so inline graph building is required
 class TraverserBuildValidationSpec : BehaviorSpec({
 
     Given("A graph state machine builder") {

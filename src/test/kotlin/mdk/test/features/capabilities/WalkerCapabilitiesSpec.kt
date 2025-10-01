@@ -3,30 +3,15 @@ package mdk.test.features.capabilities
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import mdk.gsm.builder.buildWalker
 import mdk.gsm.state.GraphStateMachineAction
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.TestTransitionGuardState
-import mdk.test.utils.TestVertex
 
 class WalkerCapabilitiesSpec : BehaviorSpec({
     
     Given("A walker that doesn't support traverser-only operations") {
         val guardState = TestTransitionGuardState()
-        val walker = buildWalker(guardState) {
-            val v1 = TestVertex("1")
-            val v2 = TestVertex("2")
-            val v3 = TestVertex("3")
-            
-            buildGraph(v1) {
-                addVertex(v1) {
-                    addEdge { setTo(v2) }
-                }
-                addVertex(v2) {
-                    addEdge { setTo(v3) }
-                }
-                addVertex(v3)
-            }
-        }
+        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
         
         When("Moving the walker forward to the second vertex") {
             runBlocking {
@@ -72,21 +57,7 @@ class WalkerCapabilitiesSpec : BehaviorSpec({
     
     Given("A walker that supports reset functionality") {
         val guardState = TestTransitionGuardState()
-        val walker = buildWalker(guardState) {
-            val start = TestVertex("start")
-            val middle = TestVertex("middle")
-            val end = TestVertex("end")
-            
-            buildGraph(start) {
-                addVertex(start) {
-                    addEdge { setTo(middle) }
-                }
-                addVertex(middle) {
-                    addEdge { setTo(end) }
-                }
-                addVertex(end)
-            }
-        }
+        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
         
         When("Walker has moved through multiple states") {
             runBlocking {
@@ -94,15 +65,15 @@ class WalkerCapabilitiesSpec : BehaviorSpec({
                 walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             }
             
-            walker.current.value.vertex.id shouldBe "end"
+            walker.current.value.vertex.id shouldBe "3"
             
             Then("Reset action should return to the start") {
                 runBlocking {
                     val resetState = walker.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
-                    resetState.vertex.id shouldBe "start"
+                    resetState.vertex.id shouldBe "1"
                 }
                 
-                walker.current.value.vertex.id shouldBe "start"
+                walker.current.value.vertex.id shouldBe "1"
             }
         }
     }

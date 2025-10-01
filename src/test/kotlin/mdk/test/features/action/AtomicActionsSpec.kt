@@ -9,15 +9,50 @@ import mdk.gsm.builder.DispatcherConfig
 import mdk.gsm.builder.buildTraverserWithActions
 import mdk.gsm.builder.buildWalkerWithActions
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.traverser.Traverser
-import mdk.gsm.state.walker.Walker
 import mdk.test.utils.TestTransitionGuardState
 import mdk.test.utils.TestVertex
 
+// Note: This test file tests atomic action processing with delays, so inline graph building is required
 class AtomicActionsSpec : BehaviorSpec(
     body = {
         Given("A traverser with delayed traversal guards testing action atomicity") {
-            val traverser = buildGraphWithSuspensionPoints()
+            val traverser = buildTraverserWithActions<TestVertex, String, TestTransitionGuardState, Int>(guardState = TestTransitionGuardState()) {
+                val v1 = TestVertex("1")
+                val v2 = TestVertex("2")
+                val v3 = TestVertex("3")
+                val v5 = TestVertex("5")
+
+                buildGraph(startAtVertex = v1) {
+                    addVertex(v1) {
+                        addEdge {
+                            setTo(v2)
+                            setEdgeTransitionGuard {
+                                delay(500)
+                                true
+                            }
+                        }
+                    }
+                    addVertex(v2) {
+                        addEdge {
+                            setTo(v3)
+                            setEdgeTransitionGuard {
+                                delay(500)
+                                true
+                            }
+                        }
+                    }
+                    addVertex(v3) {
+                        addEdge {
+                            setTo(v5)
+                            setEdgeTransitionGuard {
+                                delay(500)
+                                true
+                            }
+                        }
+                    }
+                    addVertex(v5)
+                }
+            }
 
             When("Multiple numbered actions are dispatched in sequence") {
                 traverser.launchDispatch(GraphStateMachineAction.NextArgs(1))
@@ -40,8 +75,44 @@ class AtomicActionsSpec : BehaviorSpec(
             }
         }
 
-        Given("A traverser with multiple delays") {
-            val traverser = buildGraphWithSuspensionPoints()
+        Given("A traverser with multiple delays for testing sequential dispatch") {
+            val traverser = buildTraverserWithActions<TestVertex, String, TestTransitionGuardState, Int>(guardState = TestTransitionGuardState()) {
+                val v1 = TestVertex("1")
+                val v2 = TestVertex("2")
+                val v3 = TestVertex("3")
+                val v5 = TestVertex("5")
+
+                buildGraph(startAtVertex = v1) {
+                    addVertex(v1) {
+                        addEdge {
+                            setTo(v2)
+                            setEdgeTransitionGuard {
+                                delay(500)
+                                true
+                            }
+                        }
+                    }
+                    addVertex(v2) {
+                        addEdge {
+                            setTo(v3)
+                            setEdgeTransitionGuard {
+                                delay(500)
+                                true
+                            }
+                        }
+                    }
+                    addVertex(v3) {
+                        addEdge {
+                            setTo(v5)
+                            setEdgeTransitionGuard {
+                                delay(500)
+                                true
+                            }
+                        }
+                    }
+                    addVertex(v5)
+                }
+            }
 
             When("Actions are dispatched with result awaited") {
                 val result1 = traverser.dispatchAndAwaitResult(GraphStateMachineAction.NextArgs(10))
@@ -66,8 +137,39 @@ class AtomicActionsSpec : BehaviorSpec(
             }
         }
 
-        Given("A walker with a conflated channel") {
-            val walker = buildWalkerWithConflatedChannel()
+        Given("A walker with a conflated channel for testing conflation") {
+            val dispatcherConfig = DispatcherConfig<Int>(capacity = Channel.CONFLATED)
+            val walker = buildWalkerWithActions(
+                guardState = TestTransitionGuardState(),
+                dispatcherConfig = dispatcherConfig
+            ) {
+                val v1 = TestVertex("1")
+                val v2 = TestVertex("2")
+                val v3 = TestVertex("3")
+                val v5 = TestVertex("5")
+
+                buildGraph(startAtVertex = v1) {
+                    addVertex(v1) {
+                        addEdge {
+                            setTo(v2)
+                            setEdgeTransitionGuard { true }
+                        }
+                    }
+                    addVertex(v2) {
+                        addEdge {
+                            setTo(v3)
+                            setEdgeTransitionGuard { true }
+                        }
+                    }
+                    addVertex(v3) {
+                        addEdge {
+                            setTo(v5)
+                            setEdgeTransitionGuard { true }
+                        }
+                    }
+                    addVertex(v5)
+                }
+            }
 
             When("Multiple actions are dispatched using the conditionally suspending `dispatch` method") {
                 suspend fun dispatchSequence() {
@@ -97,93 +199,3 @@ class AtomicActionsSpec : BehaviorSpec(
         }
     }
 )
-
-private fun buildGraphWithSuspensionPoints(): Traverser<TestVertex, String, TestTransitionGuardState, Int> {
-    return buildTraverserWithActions(guardState = TestTransitionGuardState()) {
-        val v1 = TestVertex("1")
-        val v2 = TestVertex("2")
-        val v3 = TestVertex("3")
-        val v5 = TestVertex("5")
-
-        buildGraph(startAtVertex = v1) {
-            addVertex(v1) {
-                addEdge {
-                    setTo(v2)
-                    setEdgeTransitionGuard {
-                        delay(500)
-                        true
-                    }
-                }
-            }
-
-            addVertex(v2) {
-                addEdge {
-                    setTo(v3)
-                    setEdgeTransitionGuard {
-                        delay(500)
-                        true
-                    }
-                }
-            }
-
-            addVertex(v3) {
-                addEdge {
-                    setTo(v5)
-                    setEdgeTransitionGuard {
-                        delay(500)
-                        true
-                    }
-                }
-            }
-
-            addVertex(v5) {
-            }
-        }
-    }
-}
-
-private fun buildWalkerWithConflatedChannel(): Walker<TestVertex, String, TestTransitionGuardState, Int> {
-    val dispatcherConfig = DispatcherConfig<Int>(capacity = Channel.CONFLATED)
-
-    return buildWalkerWithActions(
-        guardState = TestTransitionGuardState(),
-        dispatcherConfig = dispatcherConfig
-    ) {
-        val v1 = TestVertex("1")
-        val v2 = TestVertex("2")
-        val v3 = TestVertex("3")
-        val v5 = TestVertex("5")
-
-        buildGraph(startAtVertex = v1) {
-            addVertex(v1) {
-                addEdge {
-                    setTo(v2)
-                    setEdgeTransitionGuard {
-                        true
-                    }
-                }
-            }
-
-            addVertex(v2) {
-                addEdge {
-                    setTo(v3)
-                    setEdgeTransitionGuard {
-                        true
-                    }
-                }
-            }
-
-            addVertex(v3) {
-                addEdge {
-                    setTo(v5)
-                    setEdgeTransitionGuard {
-                        true
-                    }
-                }
-            }
-
-            addVertex(v5) {
-            }
-        }
-    }
-}
